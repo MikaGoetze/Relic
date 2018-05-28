@@ -1,10 +1,12 @@
 #ifndef RELIC_BEHAVIOUR_H
 #define RELIC_BEHAVIOUR_H
 #include <string>
+#include <Core/Serializable.h>
 
-class RelicBehaviour
+class RelicBehaviour : Serializable
 {
 public:
+
 	RelicBehaviour()
 	{
 	}

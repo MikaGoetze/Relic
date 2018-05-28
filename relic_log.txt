@@ -1,3 +1,1 @@
 [Relic][Core] Initialised Engine. Starting game loop...
-[Relic][Core] Registered class Test
-[Relic][Core] Cleaning up class Test.

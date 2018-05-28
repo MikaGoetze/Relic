@@ -2,11 +2,14 @@
 #define GAME_OBJECT_H
 #include <vector>
 #include <Core/RelicBehaviour.h>
+#include <Core/Serializable.h>
 
-class GameObject
+class GameObject : Serializable
 {
 public:
-	
+	void Serialize() override;
+	void Deserialize() override;
+
 	GameObject();
 	GameObject(std::string name);
 	~GameObject();

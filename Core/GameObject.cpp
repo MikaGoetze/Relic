@@ -1,17 +1,31 @@
 ﻿#include "GameObject.h"
+#include <fstream>
 
-GameObject::GameObject()
+void GameObject::Serialize()
+{
+	std::string scene = "test.txt";
+	std::ofstream ofs;
+	ofs.open(scene.c_str(), std::ofstream::out | std::ofstream::app);
+
+
+
+	ofs.close();
+}
+
+void GameObject::Deserialize()
+{
+}
+
+GameObject::GameObject() : Name(name)
 {
 	behaviours = std::vector<RelicBehaviour*>();
 	name = "GameObject";
-	Name = name;
 }
 
-GameObject::GameObject(std::string name)
+GameObject::GameObject(std::string name) : Name(name)
 {
 	behaviours = std::vector<RelicBehaviour*>();
 	this->name = name;
-	Name = this->name;
 }
 
 GameObject::~GameObject()

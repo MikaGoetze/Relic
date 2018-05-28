@@ -2,6 +2,14 @@
 #include <iostream>
 
 
+void Test::Serialize()
+{
+}
+
+void Test::Deserialize()
+{
+}
+
 Test::Test()
 {
 }
