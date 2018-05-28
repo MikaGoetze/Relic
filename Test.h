@@ -6,6 +6,8 @@
 class Test : public RelicBehaviour
 {
 public:
+	void Serialize() override;
+	void Deserialize() override;
 	Test();
 	~Test();
 
