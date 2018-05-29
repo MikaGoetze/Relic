@@ -91,12 +91,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\mikag\Documents\a1220155\2018\s1\cg\assignment3part2\assignment3part2;F:\OpenGL\glfw32\include;F:\OpenGL\glm;F:\OpenGL\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>E:\Projects\Relic;F:\OpenGL\glfw32\include;F:\OpenGL\glm;F:\OpenGL\glew\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\mikag\Documents\a1220155\2018\s1\cg\assignment3part2\assignment3part2;F:\OpenGL\glfw32\lib-vc2015;F:\OpenGL\glew\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>E:\Projects\Relic;F:\OpenGL\glfw32\lib-vc2015;F:\OpenGL\glew\lib\Release\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glew32s.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -153,8 +153,12 @@
   <ItemGroup>
     <ClInclude Include="Camera\Camera.h" />
     <ClInclude Include="Camera\FPSCamera.h" />
+    <ClInclude Include="Core\GameObject.h" />
     <ClInclude Include="Core\Input.h" />
     <ClInclude Include="Core\RelicBehaviour.h" />
+    <ClInclude Include="Core\Scene.h" />
+    <ClInclude Include="Core\Serializable.h" />
+    <ClInclude Include="Core\Serializer.h" />
     <ClInclude Include="Core\Util.h" />
     <ClInclude Include="Core\Window.h" />
     <ClInclude Include="Lighting\DirectionalLight.h" />
@@ -172,7 +176,11 @@
     <ClInclude Include="Texturing\Texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="assignment3part2.cpp" />
+    <ClCompile Include="Core\GameObject.cpp" />
+    <ClCompile Include="Core\Scene.cpp" />
+    <ClCompile Include="Core\Serializable.cpp" />
+    <ClCompile Include="Core\Serializer.cpp" />
+    <ClCompile Include="user_main.cpp" />
     <ClCompile Include="Camera\Camera.cpp" />
     <ClCompile Include="Camera\FPSCamera.cpp" />
     <ClCompile Include="Core\Input.cpp" />

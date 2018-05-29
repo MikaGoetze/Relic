@@ -21,7 +21,8 @@ void Serializer::CloseOutputFile()
 void Serializer::WriteScene(Scene* scene)
 {
 	XMLObject xmlScene;
-	AddAttribute(xmlScene, ConstructStringAttribute("name", scene->GetName()));
+	XMLAttribute attrib = ConstructStringAttribute("name", scene->GetName());
+	AddAttribute(xmlScene, attrib);
 	WriteID(xmlScene);
 
 	XMLArray gos;
@@ -31,25 +32,61 @@ void Serializer::WriteScene(Scene* scene)
 		WriteGO(go, gos);
 	}
 
-	AddAttribute(xmlScene, ConstructArrayAttribute("gos", &gos));
+	attrib = ConstructArrayAttribute("gos", &gos);
+	AddAttribute(xmlScene, attrib);
 
 	OpenOutputFile(scene->GetName() + ".scene");
 	WriteXMLObject(xmlScene);
 	CloseOutputFile();
 }
 
-void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
+void Serializer::CreateXMLRepresentation()
 {
-	
+	representation = XMLObject();
 }
 
-void Serializer::WriteBehaviour(RelicBehaviour* behaviour)
+void Serializer::AddFloat(std::string name, float& val)
 {
+	XMLAttribute attrib = instance->ConstructFloatAttribute(name, val);
+	instance->AddAttribute(instance->representation, attrib);
+}
+
+void Serializer::AddString(std::string name, std::string& val)
+{
+	XMLAttribute attrib = instance->ConstructStringAttribute(name, val);
+	instance->AddAttribute(instance->representation, attrib);
+}
+
+void Serializer::AddBool(std::string name, bool& val)
+{
+	XMLAttribute attrib = instance->ConstructBoolAttribute(name, val);
+	instance->AddAttribute(instance->representation, attrib);
+}
+
+void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
+{
+	for(RelicBehaviour* behaviour : go->behaviours)
+	{
+		Util::Log("[Relic][Core] Serializing " + std::string(typeid(*behaviour).name()));
+		CreateXMLRepresentation();
+
+		behaviour->Serialize();
+
+		//Add it's type for later
+		std::string class_name = std::string((typeid(*behaviour).name()));
+		class_name = class_name.substr(6, class_name.size() - 6);
+		XMLAttribute attrib = ConstructStringAttribute("_type_", class_name);
+		AddAttribute(representation, attrib);
+
+		XMLObject* obj = new XMLObject(representation);
+
+		obj_array.elements.push_back(static_cast<void*>(obj));
+	}
 }
 
 void Serializer::AddAttribute(XMLObject& obj, XMLAttribute& attribute)
 {
-
+	obj.attributes.push_back(attribute);
 }
 
 Serializer::XMLAttribute Serializer::ConstructFloatAttribute(std::string name, float val)
@@ -94,8 +131,25 @@ Serializer::XMLAttribute Serializer::ConstructArrayAttribute(std::string name, X
 
 void Serializer::WriteID(XMLObject& obj)
 {
-	AddAttribute(obj, ConstructFloatAttribute("id", id));
+	XMLAttribute attrib = ConstructFloatAttribute("id", id);
+	AddAttribute(obj, attrib);
 }
+
+Serializer::Serializer()
+{
+	if(instance != NULL)
+	{
+		Util::Log("[Relic][Serializer] Warning : Serializer instance is already initialised. Discarding new copy...");
+		return;
+	}
+	instance = this;
+}
+
+Serializer::~Serializer()
+{
+}
+
+Serializer* Serializer::instance;
 
 void* Serializer::XMLAttribute::GetValue()
 {

@@ -2,17 +2,24 @@
 #define TEST_H
 
 #include <Core/RelicBehaviour.h>
+#include <vector>
 
 class Test : public RelicBehaviour
 {
-public:
+protected:
+
 	void Serialize() override;
 	void Deserialize() override;
+public:
 	Test();
 	~Test();
 
 	virtual void Update();
 	virtual void Start();
+
+	bool b;
+	float f;
+	std::vector<float*> ia;
 };
 
 #endif

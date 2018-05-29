@@ -3,7 +3,7 @@
 #include <string>
 #include <Core/Serializable.h>
 
-class RelicBehaviour : Serializable
+class RelicBehaviour : public Serializable
 {
 public:
 

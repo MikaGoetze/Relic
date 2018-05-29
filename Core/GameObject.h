@@ -3,6 +3,7 @@
 #include <vector>
 #include <Core/RelicBehaviour.h>
 #include <Core/Serializable.h>
+#include "Util.h"
 
 class GameObject : Serializable
 {
@@ -24,6 +25,7 @@ public:
 private:
 	std::string name;
 	std::vector<RelicBehaviour*> behaviours;
+	friend class Serializer;
 };
 
 template <typename T>
@@ -52,6 +54,7 @@ T* GameObject::AddComponent()
 	T* component = new T();
 	behaviours.push_back(component);
 	return component;
+
 }
 
 #endif

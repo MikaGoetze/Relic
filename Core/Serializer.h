@@ -7,6 +7,8 @@
 class Serializer
 {
 private:
+
+
 	std::ofstream ofs;
 	unsigned int id;
 
@@ -94,19 +96,21 @@ private:
 	void CloseOutputFile();
 
 	XMLObject representation;
+	static Serializer* instance;
 public:
+
+	Serializer();
+	~Serializer();
 	void WriteScene(Scene* scene);
 
-	//TODO: Implement these methods
 	void CreateXMLRepresentation();
-	void AddXMLRepresentation();
 
-	void AddFloat(std::string name, float& val);
-	void AddString(std::string name, std::string& val);
-	void AddBool(std::string name, bool& val);
+	static void AddFloat(std::string name, float& val);
+	static void AddString(std::string name, std::string& val);
+	static void AddBool(std::string name, bool& val);
 
 	template<typename T>
-	void AddVector(std::string name, bool& val);
+	static void AddVector(std::string name, std::vector<T*>& val);
 
 };
 
@@ -125,6 +129,39 @@ void Serializer::WriteArray(std::string name, std::string type, std::vector<T*>&
 		
 	}
 	ofs << "]\n},\n";
+}
+
+template <typename T>
+void Serializer::AddVector(std::string name, std::vector<T*>& val)
+{
+	XMLArray *array = new XMLArray();
+	std::string type = std::string(typeid(T).name());
+	
+	if (type == "float")
+		array->type = ValueType::Float;
+	else if(type == "std::string")
+		array->type = ValueType::String;
+	else if(type == "bool")
+		array->type = ValueType::Bool;
+	else{
+		if(std::is_base_of<RelicBehaviour, T>())
+		{
+			array->type = ValueType::Reference;
+		}
+		else
+		{
+			Util::Log("Unsupported type encountered during serialization: " + std::string(typeid(T).name()));
+			return;
+		}
+	}
+
+	for(int i = 0; i < val.size(); i++)
+	{
+		array->elements.push_back(static_cast<void*>(val.at(i)));
+	}
+
+	XMLAttribute attrib = instance->ConstructArrayAttribute(name, array);
+	instance->AddAttribute(instance->representation, attrib);
 }
 
 #endif
