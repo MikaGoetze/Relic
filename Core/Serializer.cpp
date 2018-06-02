@@ -18,8 +18,22 @@ void Serializer::CloseOutputFile()
 	ofs.close();
 }
 
+int Serializer::GetIDByPointer(void* pointer)
+{
+	for(Reference ref : References)
+	{
+		if(ref.pointer == pointer)
+		{
+			return ref.id;
+		}
+	}
+	return -1;
+}
+
 void Serializer::WriteScene(Scene* scene)
 {
+	id = 0;
+	References = std::vector<Reference>();
 	XMLObject xmlScene;
 	XMLAttribute attrib = ConstructStringAttribute("name", scene->GetName());
 	AddAttribute(xmlScene, attrib);
@@ -30,6 +44,13 @@ void Serializer::WriteScene(Scene* scene)
 	for (GameObject* go : scene->GetGameObjects())
 	{
 		WriteGO(go, gos);
+	}
+
+	for (void* game_object : gos.elements)
+	{
+		XMLObject* obj = static_cast<XMLObject*>(game_object);
+
+		ResolveReferences(*obj);
 	}
 
 	attrib = ConstructArrayAttribute("gos", &gos);
@@ -63,6 +84,12 @@ void Serializer::AddBool(std::string name, bool& val)
 	instance->AddAttribute(instance->representation, attrib);
 }
 
+void Serializer::AddInt(std::string name, int& val)
+{
+	XMLAttribute attrib = instance->ConstructIntAttribute(name, val);
+	instance->AddAttribute(instance->representation, attrib);
+}
+
 void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 {
 	XMLObject* gameObj = new XMLObject();
@@ -90,10 +117,77 @@ void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 
 		XMLObject* obj = new XMLObject(representation);
 
+		//Lets also add it to the list
+		const int obj_id = id;
+		WriteID(*obj);
+
+		Reference ref{};
+		ref.id = obj_id;
+		ref.pointer = static_cast<void*>(behaviour);
+
+		References.push_back(ref);
+
 		behaviours->elements.push_back(static_cast<void*>(obj));
 	}
 
 	obj_array.elements.push_back(static_cast<void*>(gameObj));
+}
+
+void Serializer::ResolveReferences(XMLObject& obj)
+{
+	References;
+	for(int i = 0; i < obj.attributes.size(); i++)
+	{
+		XMLAttribute attrib = obj.attributes.at(i);
+
+		if(attrib.GetValueType() == ValueType::Reference)
+		{
+			//We need to find a matching script with this pointer:
+			void* p = attrib.GetReference();
+			int id = GetIDByPointer(p);
+			if(id == -1)
+			{
+				Util::Log("[Relic][Serializer] Error : Could not find script...");
+				attrib.SetValue("ERR");
+				continue;
+			}
+
+			attrib.SetValue(id, true);
+		}
+		else if(attrib.GetValueType() == ValueType::XMLArray)
+		{
+			XMLArray* array = static_cast<XMLArray*>(attrib.GetValue());
+			if(array->type == ValueType::Reference)
+			{
+				XMLArray* newArray = new XMLArray();
+				for(void* item : array->elements)
+				{
+					int id = GetIDByPointer(item);
+					if(id == -1)
+					{
+						Util::Log("[Relic][Serializer] Error : Could not find script...");
+					}
+					int* id_p = new int();
+					*id_p = id;
+					newArray->elements.push_back(id_p);
+				}
+				newArray->type = ValueType::Reference;
+
+				attrib.SetValue(newArray);
+			}
+			else if(array->type == ValueType::XMLObject)
+			{
+				for(void* item : array->elements)
+					ResolveReferences(*static_cast<XMLObject*>(item));
+			}
+		}
+		else if(attrib.GetValueType() == ValueType::XMLObject)
+		{
+			ResolveReferences(*static_cast<XMLObject*>(attrib.GetValue()));
+		}
+
+		obj.attributes.at(i) = attrib;
+	}
 }
 
 void Serializer::AddAttribute(XMLObject& obj, XMLAttribute& attribute)
@@ -106,6 +200,14 @@ Serializer::XMLAttribute Serializer::ConstructFloatAttribute(std::string name, f
 	XMLAttribute attribute;
 	attribute.name = name;
 	attribute.SetValue(val);
+	return attribute;
+}
+
+Serializer::XMLAttribute Serializer::ConstructIntAttribute(std::string name, int val)
+{
+	XMLAttribute attribute;
+	attribute.name = name;
+	attribute.SetValue(val, false);
 	return attribute;
 }
 
@@ -144,6 +246,7 @@ Serializer::XMLAttribute Serializer::ConstructArrayAttribute(std::string name, X
 void Serializer::WriteID(XMLObject& obj)
 {
 	XMLAttribute attrib = ConstructFloatAttribute("id", id);
+	id++;
 	AddAttribute(obj, attrib);
 }
 
@@ -155,6 +258,7 @@ Serializer::Serializer()
 		return;
 	}
 	instance = this;
+	References = std::vector<Reference>();
 }
 
 Serializer::~Serializer()
@@ -169,6 +273,8 @@ void* Serializer::XMLAttribute::GetValue()
 	{
 	case ValueType::String: return static_cast<void*>(&value_s);
 	case ValueType::Float: return static_cast<void*>(&value_f);
+	case ValueType::Reference:
+	case ValueType::Int: return static_cast<void*>(&value_i);
 	case ValueType::Bool: return static_cast<void*>(&value_b);
 	case ValueType::XMLObject: return static_cast<void*>(value_xo);
 	case ValueType::XMLArray: return static_cast<void*>(value_xa);
@@ -211,6 +317,27 @@ void Serializer::XMLAttribute::SetValue(XMLArray* val)
 	type = ValueType::XMLArray;
 }
 
+void Serializer::XMLAttribute::SetValue(int val, bool is_reference)
+{
+	value_i = val;
+	if (is_reference)
+		type = ValueType::Reference;
+	else
+		type = ValueType::Int;
+	
+}
+
+void Serializer::XMLAttribute::SetReference(void* val)
+{
+	ref_temp = val;
+	type = ValueType::Reference;
+}
+
+void* Serializer::XMLAttribute::GetReference()
+{
+	return ref_temp;
+}
+
 const std::type_info& Serializer::XMLAttribute::GetType()
 {
 	switch (type)
@@ -218,6 +345,8 @@ const std::type_info& Serializer::XMLAttribute::GetType()
 	case ValueType::String: return typeid(value_s);
 	case ValueType::Float: return typeid(value_f);
 	case ValueType::Bool: return typeid(value_b);
+	case ValueType::Reference:
+	case ValueType::Int: return typeid(value_i);
 	case ValueType::XMLObject: return typeid(value_xo);
 	case ValueType::XMLArray: return typeid(value_xa);
 	default: return typeid(NULL);
@@ -255,6 +384,10 @@ void Serializer::WriteXMLAttribute(XMLAttribute attrib, int indent)
 		break;
 	case ValueType::Bool:
 		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<bool*>(attrib.GetValue());
+		break;
+	case ValueType::Int:
+	case ValueType::Reference:
+		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<int*>(attrib.GetValue());
 		break;
 	case ValueType::XMLObject:
 		obj = static_cast<XMLObject*>(attrib.GetValue());
@@ -297,10 +430,11 @@ void Serializer::WriteXMLArray(XMLArray array, int indent)
 			ofs << ind << *b << "," << std::endl;
 		}
 		break;
+	case ValueType::Int:
 	case ValueType::Reference: 
 		for(auto element : array.elements)
 		{
-			auto ui = static_cast<unsigned*>(element);
+			auto ui = static_cast<int*>(element);
 			ofs << ind << *ui << "," << std::endl;
 		}
 		break;
