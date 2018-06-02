@@ -20,7 +20,7 @@ public:
 	bool b;
 	float f;
 	std::vector<float*> ia;
-	Test* other;
+	std::vector<Test*> others;
 };
 
 #endif

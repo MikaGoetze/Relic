@@ -7,11 +7,7 @@
 class Serializer
 {
 private:
-
-
-	std::ofstream ofs;
-	unsigned int id;
-
+	//Structs
 	struct XMLObject;
 
 	enum class ValueType
@@ -87,9 +83,38 @@ private:
 		unsigned int id;
 	};
 
+
+	//Vars
+	std::ofstream ofs;
+	unsigned int id;
+	std::vector<Reference> References;
+
+	XMLObject representation;
+	static Serializer* instance;
+
+	//Functions
+	//Writing
 	void WriteXMLObject(XMLObject obj, int indent);
 	void WriteXMLAttribute(XMLAttribute attrib, int indent);
 	void WriteXMLArray(XMLArray array, int indent);
+	void WriteID(XMLObject& obj);
+	void WriteGO(GameObject* go, XMLArray& obj_array);
+	void ResolveReferences(XMLObject& obj);
+
+	//Reading
+	XMLObject ReadXMLObject(std::ifstream& file);
+	XMLAttribute ReadXMLAttribute(std::ifstream& file);
+	XMLArray ReadXMLArray(std::ifstream& file);
+	std::string ReadLine(std::ifstream& file);
+	bool AssertLine(std::ifstream& file, std::string line);
+	std::string PeekLine(std::ifstream& file);
+	std::string CleanWhiteSpace(std::string line);
+
+	void OpenOutputFile(std::string file);
+	void CloseOutputFile();
+
+
+	int GetIDByPointer(void* pointer);
 
 	void AddAttribute(XMLObject& obj, XMLAttribute& attribute);
 	XMLAttribute ConstructFloatAttribute(std::string name, float val);
@@ -98,22 +123,13 @@ private:
 	XMLAttribute ConstructStringAttribute(std::string name, std::string val);
 	XMLAttribute ConstructObjectAttribute(std::string name, XMLObject *val);
 	XMLAttribute ConstructArrayAttribute(std::string name, XMLArray* val);
-	void WriteID(XMLObject& obj);
-	void WriteGO(GameObject* go, XMLArray& obj_array);
-	void ResolveReferences(XMLObject& obj);
-	void OpenOutputFile(std::string file);
-	void CloseOutputFile();
-	int GetIDByPointer(void* pointer);
-
-	std::vector<Reference> References;
-
-	XMLObject representation;
-	static Serializer* instance;
 public:
 
 	Serializer();
 	~Serializer();
 	void WriteScene(Scene* scene);
+
+	Scene* LoadScene(std::string filepath);
 
 	void CreateXMLRepresentation();
 

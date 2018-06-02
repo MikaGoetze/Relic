@@ -1,5 +1,46 @@
 ﻿#include "Serializer.h"
+#include <algorithm>
 #include <Core/Util.h>
+
+std::string Serializer::ReadLine(std::ifstream& file)
+{
+	std::string line;
+	if(!std::getline(file, line))
+	{
+		Util::Log("[Relic][Serializer] Error : Unexpected EOF.");
+		return "";
+	}
+	return line;
+}
+
+bool Serializer::AssertLine(std::ifstream& file, std::string line)
+{
+	std::string f_line = ReadLine(file);
+	f_line = CleanWhiteSpace(f_line);
+	if(f_line != line)
+	{
+		Util::Log("[Relic][Serializer] Error : Expected '" + line + "'. Received '" + f_line + "'.");
+		return false;
+	}
+	return true;
+}
+
+std::string Serializer::PeekLine(std::ifstream& file)
+{
+	int pos = file.tellg();
+	std::string line;
+	std::getline(file, line);
+	file.seekg(pos, std::ios_base::beg);
+
+	return line;
+}
+
+std::string Serializer::CleanWhiteSpace(std::string line)
+{
+	std::string::iterator it = std::remove_if(line.begin(), line.end(), ::isspace);
+	line.erase(it, line.end());
+	return line;
+}
 
 void Serializer::OpenOutputFile(std::string file)
 {
@@ -59,6 +100,16 @@ void Serializer::WriteScene(Scene* scene)
 	OpenOutputFile(scene->GetName() + ".scene");
 	WriteXMLObject(xmlScene, 0);
 	CloseOutputFile();
+}
+
+Scene* Serializer::LoadScene(std::string filepath)
+{
+	Scene* scene = new Scene();
+
+	std::ifstream file(filepath);
+	XMLObject obj = ReadXMLObject(file);
+	
+	return scene;
 }
 
 void Serializer::CreateXMLRepresentation()
@@ -188,6 +239,79 @@ void Serializer::ResolveReferences(XMLObject& obj)
 
 		obj.attributes.at(i) = attrib;
 	}
+}
+
+Serializer::XMLObject Serializer::ReadXMLObject(std::ifstream& file)
+{
+	std::string line;
+	XMLObject obj;
+
+	AssertLine(file, "{");
+	while(PeekLine(file) != "}")
+	{
+		XMLAttribute* attribute = new XMLAttribute();
+		*attribute = ReadXMLAttribute(file);
+		obj.attributes.push_back(*attribute);
+	}
+	
+	return obj;
+}
+
+
+Serializer::XMLAttribute Serializer::ReadXMLAttribute(std::ifstream& file)
+{
+	XMLAttribute attribute;
+	std::string line = ReadLine(file);
+	line = CleanWhiteSpace(line);
+	Util::Log(line);
+
+	if(line[0] != '"')
+	{
+		Util::Log("[Relic][Core] Error : Expected quotatation mark. Got " + line + ".");
+		return attribute;
+	}
+	line = line.substr(1, line.size() - 1);
+
+	int pos = line.find('\"');
+	std::string attr_name = line.substr(0, pos);
+	line = line.substr(pos + 2, line.size() - pos - 2);
+
+	std::string val = line.substr(0, line.size() - 1);
+	
+
+	if(val[0] == '"')
+	{
+		//Then it's a string
+	}
+	else if(::isdigit(val[0]))
+	{
+		//Then it's a number - we'll have to check what type
+	}
+	else if(val[0] == 'T' || val[0] == 'F')
+	{
+		//It's a bool
+	}
+	else if(val[0] == '#')
+	{
+		//Then it's a reference
+	}
+	else if(val[0] == '')
+	{
+		//Then it might be an array - lets peek the next line
+	}
+
+	if(line[line.size() - 1] != ',')
+	{
+		Util::Log("[Relic][Core] Error : Expected comma. Got " + line + ".");
+		return attribute;
+	}
+
+	return attribute;
+}
+
+Serializer::XMLArray Serializer::ReadXMLArray(std::ifstream& file)
+{
+	return XMLArray();
 }
 
 void Serializer::AddAttribute(XMLObject& obj, XMLAttribute& attribute)
@@ -383,11 +507,13 @@ void Serializer::WriteXMLAttribute(XMLAttribute attrib, int indent)
 		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<float*>(attrib.GetValue());
 		break;
 	case ValueType::Bool:
-		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<bool*>(attrib.GetValue());
+		ofs << ind << "\"" << attrib.name << "\": " << (*static_cast<bool*>(attrib.GetValue()) ? "T" : "F");
 		break;
 	case ValueType::Int:
-	case ValueType::Reference:
 		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<int*>(attrib.GetValue());
+		break;
+	case ValueType::Reference:
+		ofs << ind << "\"" << attrib.name << "\": #" << *static_cast<int*>(attrib.GetValue());
 		break;
 	case ValueType::XMLObject:
 		obj = static_cast<XMLObject*>(attrib.GetValue());

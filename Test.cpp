@@ -7,8 +7,9 @@ void Test::Serialize()
 	Serializer::AddBool("b", b);
 	Serializer::AddFloat("f", f);
 	Serializer::AddVector("ia", ia);
-	Serializer::AddReference("other", other);
-}
+	if (others.size() > 0)
+		Serializer::AddVector("others", others);
+}	
 
 void Test::Deserialize()
 {
