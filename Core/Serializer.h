@@ -72,9 +72,9 @@ private:
 		std::vector<XMLAttribute> attributes;
 	};
 
-	void WriteXMLObject(XMLObject obj);
-	void WriteXMLAttribute(XMLAttribute attrib);
-	void WriteXMLArray(XMLArray array);
+	void WriteXMLObject(XMLObject obj, int indent);
+	void WriteXMLAttribute(XMLAttribute attrib, int indent);
+	void WriteXMLArray(XMLArray array, int indent);
 
 
 	//template<typename T>

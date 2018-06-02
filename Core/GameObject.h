@@ -2,8 +2,7 @@
 #define GAME_OBJECT_H
 #include <vector>
 #include <Core/RelicBehaviour.h>
-#include <Core/Serializable.h>
-#include "Util.h"
+#include <Core/Util.h>
 
 class GameObject : Serializable
 {

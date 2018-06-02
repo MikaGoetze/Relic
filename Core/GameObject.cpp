@@ -1,15 +1,8 @@
 ﻿#include "GameObject.h"
-#include <fstream>
 
 void GameObject::Serialize()
 {
-	std::string scene = "test.txt";
-	std::ofstream ofs;
-	ofs.open(scene.c_str(), std::ofstream::out | std::ofstream::app);
 
-
-
-	ofs.close();
 }
 
 void GameObject::Deserialize()

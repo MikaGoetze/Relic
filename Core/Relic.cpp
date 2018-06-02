@@ -58,6 +58,11 @@ void Relic::GameLoop()
 
 void Relic::Update()
 {
+	if (Window->ShouldClose()) {
+		gameRunning = false;
+		return;
+	}
+
 	if(Input::Instance != NULL)
 		Input::Update();
 
@@ -74,6 +79,7 @@ void Relic::Update()
 	glfwSwapBuffers(Window->InternalWindow());
 	//Poll events
 	glfwPollEvents();
+
 }
 
 void Relic::Start()

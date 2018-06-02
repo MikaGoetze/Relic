@@ -40,6 +40,11 @@ public:
 		return window;
 	}
 
+	bool ShouldClose() const
+	{
+		return glfwWindowShouldClose(window);
+	}
+
 private:
 	int windowWidth;
 	int windowHeight;

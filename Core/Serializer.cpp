@@ -36,7 +36,7 @@ void Serializer::WriteScene(Scene* scene)
 	AddAttribute(xmlScene, attrib);
 
 	OpenOutputFile(scene->GetName() + ".scene");
-	WriteXMLObject(xmlScene);
+	WriteXMLObject(xmlScene, 0);
 	CloseOutputFile();
 }
 
@@ -65,6 +65,16 @@ void Serializer::AddBool(std::string name, bool& val)
 
 void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 {
+	XMLObject* gameObj = new XMLObject();
+	XMLArray* behaviours = new XMLArray();
+	behaviours->type = ValueType::XMLObject;
+
+	XMLAttribute array_attribute = XMLAttribute();
+	array_attribute.name = "behaviours";
+	array_attribute.SetValue(behaviours);
+
+	gameObj->attributes.push_back(array_attribute);
+
 	for(RelicBehaviour* behaviour : go->behaviours)
 	{
 		Util::Log("[Relic][Core] Serializing " + std::string(typeid(*behaviour).name()));
@@ -80,8 +90,10 @@ void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 
 		XMLObject* obj = new XMLObject(representation);
 
-		obj_array.elements.push_back(static_cast<void*>(obj));
+		behaviours->elements.push_back(static_cast<void*>(obj));
 	}
+
+	obj_array.elements.push_back(static_cast<void*>(gameObj));
 }
 
 void Serializer::AddAttribute(XMLObject& obj, XMLAttribute& attribute)
@@ -212,20 +224,23 @@ const std::type_info& Serializer::XMLAttribute::GetType()
 	}
 }
 
-void Serializer::WriteXMLObject(XMLObject obj)
+void Serializer::WriteXMLObject(XMLObject obj, int indent)
 {
-	ofs << "{" << std::endl;
+	std::string ind = std::string(indent, ' ');
+	ofs << ind << "{" << std::endl;
 	for(XMLAttribute attribute : obj.attributes)
 	{
-		WriteXMLAttribute(attribute);
+		WriteXMLAttribute(attribute, indent + 1);
 		ofs << "," << std::endl;
 	}
-	ofs << "}" << std::endl;
+	ofs << ind << "}";
 }
 
-void Serializer::WriteXMLAttribute(XMLAttribute attrib)
+void Serializer::WriteXMLAttribute(XMLAttribute attrib, int indent)
 {
 	ValueType type = attrib.GetValueType();
+
+	std::string ind = std::string(indent, ' ');
 
 	XMLObject* obj;
 	XMLArray* arr;
@@ -233,71 +248,72 @@ void Serializer::WriteXMLAttribute(XMLAttribute attrib)
 	switch (type)
 	{
 	case ValueType::String: 
-		ofs << "\"" << attrib.name << "\": \"" << *static_cast<std::string*>(attrib.GetValue()) << "\"";
+		ofs << ind << "\"" << attrib.name << "\": \"" << *static_cast<std::string*>(attrib.GetValue()) << "\"";
 		break;
 	case ValueType::Float: 
-		ofs << "\"" << attrib.name << "\": " << *static_cast<float*>(attrib.GetValue());
+		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<float*>(attrib.GetValue());
 		break;
 	case ValueType::Bool:
-		ofs << "\"" << attrib.name << "\": " << *static_cast<bool*>(attrib.GetValue());
+		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<bool*>(attrib.GetValue());
 		break;
 	case ValueType::XMLObject:
 		obj = static_cast<XMLObject*>(attrib.GetValue());
-		WriteXMLObject(*obj);
+		WriteXMLObject(*obj, indent + 1);
 		break;
 	case ValueType::XMLArray: 
-		ofs << "\"" << attrib.name << "\":" << std::endl;
+		ofs << ind << "\"" << attrib.name << "\":" << std::endl;
 		arr = static_cast<XMLArray*>(attrib.GetValue());
-		WriteXMLArray(*arr);
+		WriteXMLArray(*arr, indent + 1);
 		break;
 	default: 
-		ofs << "error: unknown type";
+		ofs << ind << "error: unknown type";
 	}
 }
 
-void Serializer::WriteXMLArray(XMLArray array)
+void Serializer::WriteXMLArray(XMLArray array, int indent)
 {
-	ofs << "[" << std::endl;
+	std::string ind = std::string(indent, ' ');
+	ofs << std::string(indent - 1, ' ') << "[" << std::endl;
 
 	switch (array.type) { 
 	case ValueType::String: 
 		for (auto element : array.elements)
 		{
 			auto str = static_cast<std::string*>(element);
-			ofs << "\"" << *str << "\"," << std::endl;;
+			ofs << ind << "\"" << *str << "\"," << std::endl;;
 		}
 		break;
 	case ValueType::Float:
 		for (auto element : array.elements)
 		{
 			auto flt = static_cast<float*>(element);
-			ofs << *flt << "," << std::endl;
+			ofs << ind << *flt << "," << std::endl;
 		}
 		break;
 	case ValueType::Bool: 
 		for(auto element : array.elements)
 		{
 			auto b = static_cast<bool*>(element);
-			ofs << *b << "," << std::endl;
+			ofs << ind << *b << "," << std::endl;
 		}
 		break;
 	case ValueType::Reference: 
 		for(auto element : array.elements)
 		{
 			auto ui = static_cast<unsigned*>(element);
-			ofs << *ui << "," << std::endl;
+			ofs << ind << *ui << "," << std::endl;
 		}
 		break;
 	case ValueType::XMLObject: 
 		for(auto element : array.elements)
 		{
 			auto xo = static_cast<XMLObject*>(element);
-			WriteXMLObject(*xo);
+			WriteXMLObject(*xo, indent + 1);
 			ofs << "," << std::endl;
 		}
 	default: ;
 	}
 
-	ofs << "]" << std::endl;
+	ofs << std::string(indent - 1, ' ') << "]";
 }
 
