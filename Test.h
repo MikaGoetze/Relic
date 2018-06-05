@@ -10,6 +10,8 @@ protected:
 
 	void Serialize() override;
 	void Deserialize() override;
+
+	static BehaviourRegistrar<Test> registrar;
 public:
 	Test();
 	~Test();

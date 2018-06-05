@@ -1,6 +1,7 @@
 ﻿#include "Serializer.h"
 #include <algorithm>
 #include <Core/Util.h>
+#include <Core/RelicBehaviour.h>
 
 std::string Serializer::ReadLine(std::ifstream& file)
 {
@@ -40,6 +41,111 @@ std::string Serializer::CleanWhiteSpace(std::string line)
 	std::string::iterator it = std::remove_if(line.begin(), line.end(), ::isspace);
 	line.erase(it, line.end());
 	return line;
+}
+
+void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
+{
+	XMLAttribute scene_name_attr = scene_obj.GetAttribute("name");
+	std::string name = *static_cast<std::string*>(scene_name_attr.GetValue());
+	scene->SetName(name);
+
+	References.clear();
+
+	XMLArray* go_array = static_cast<XMLArray*>(scene_obj.GetAttribute("gos").GetValue());
+	for(void* game_object : go_array->elements)
+	{
+		XMLObject* game_obj = static_cast<XMLObject*>(game_object);
+		GameObject* go = new GameObject();
+
+		for (void* behaviour_void : static_cast<XMLArray*>(game_obj->GetAttribute("behaviours").GetValue())->elements)
+		{
+			XMLObject* obj_behaviour = static_cast<XMLObject*>(behaviour_void);
+
+			//Lets figure out what kind of behaviour it is and then pass it off to be deserialized
+			std::string behaviour_type = *static_cast<std::string*>(obj_behaviour->GetAttribute("_type_").GetValue());
+			//TODO: Remove this
+			Util::Log("Deserializing : " + behaviour_type);
+
+			RelicBehaviour* behaviour = CreateRelicBehaviour(behaviour_type);
+
+			Reference ref{};
+			ref.id = *static_cast<int*>(obj_behaviour->GetAttribute("_id_").GetValue());
+			ref.pointer = behaviour;
+			ref.xml_obj = obj_behaviour;
+			References.push_back(ref);
+
+			go->AddComponent(behaviour);
+		}
+
+		scene->AddGameObject(go);
+	}
+
+	//Now that we've done the initial pass, lets deserialize our behaviours
+	for(Reference ref : References)
+	{
+		RelicBehaviour* behaviour = static_cast<RelicBehaviour*>(ref.pointer);
+		//Prepare for deserialization
+		representation = *ref.xml_obj;
+
+		behaviour->Deserialize();
+	}
+}
+
+RelicBehaviour* Serializer::CreateRelicBehaviour(std::string type)
+{
+	return behaviour_registry.at(type)();
+}
+
+RelicBehaviour* Serializer::GetReferenceByID(int id)
+{
+	for(Reference ref : References)
+	{
+		if(ref.id == id)
+		{
+			return static_cast<RelicBehaviour*>(ref.pointer);
+		}
+	}
+	return NULL;
+}
+
+void Serializer::DeleteXMLObject(XMLObject* obj)
+{
+	for (XMLAttribute attribute : obj->attributes)
+	{
+		attribute.Delete();
+	}
+}
+
+void Serializer::DeleteXMLArray(XMLArray* arr)
+{
+	for (void* val : arr->elements)
+	{
+		switch (arr->type)
+		{
+		case ValueType::XMLObject: 
+			DeleteXMLObject(static_cast<XMLObject*>(val));
+			break;
+		default: ;
+		}
+	}
+
+	delete arr;
+}
+
+
+std::string Serializer::ValueTypeToString(ValueType type)
+{
+	switch (type)
+	{
+	case ValueType::String: return "string";
+	case ValueType::Float: return "float";
+	case ValueType::Int: return "int";
+	case ValueType::Bool: return "bool"; 
+	case ValueType::Reference: return "Script Reference";
+	case ValueType::XMLObject: return "Object";
+	case ValueType::XMLArray: return "Array";
+	default: ;
+	}
 }
 
 void Serializer::OpenOutputFile(std::string file)
@@ -107,7 +213,17 @@ Scene* Serializer::LoadScene(std::string filepath)
 	Scene* scene = new Scene();
 
 	std::ifstream file(filepath);
+
+	//Load the scene from the XML Object
 	XMLObject obj = ReadXMLObject(file);
+
+	//Reconstruct the scene from the XML object
+	ReconstructScene(scene, obj);
+
+	//Lets clean up unneeded resources
+	DeleteXMLObject(&obj);
+
+	file.close();
 	
 	return scene;
 }
@@ -140,6 +256,82 @@ void Serializer::AddInt(std::string name, int& val)
 	XMLAttribute attrib = instance->ConstructIntAttribute(name, val);
 	instance->AddAttribute(instance->representation, attrib);
 }
+
+bool Serializer::GetBool(std::string name)
+{
+	XMLAttribute attribute = instance->representation.GetAttribute(name);
+	if(attribute.name == "ERR")
+	{
+		//Then the attribute doesnt exist.
+		Util::Log("[Relic][Serializer] Warning : Attribute '" + name + "' does not exist.");
+		return NULL;
+	}
+	if(attribute.GetValueType() != ValueType::Bool)
+	{
+		Util::Log("[Relic][Serializer] Warning : Requested deserialization of bool '" + name + "'. But it is of type: '" + ValueTypeToString(attribute.GetValueType()));
+	}
+
+	return *static_cast<bool*>(attribute.GetValue());
+}
+
+float Serializer::GetFloat(std::string name)
+{
+	XMLAttribute attribute = instance->representation.GetAttribute(name);
+	if(attribute.name == "ERR")
+	{
+		//Then the attribute doesnt exist.
+		Util::Log("[Relic][Serializer] Warning : Attribute '" + name + "' does not exist.");
+		return float();
+	}
+	if(attribute.GetValueType() != ValueType::Float)
+	{
+		Util::Log("[Relic][Serializer] Warning : Requested deserialization of float '" + name + "'. But it is of type: '" + ValueTypeToString(attribute.GetValueType()));
+	}
+
+	return *static_cast<float*>(attribute.GetValue());
+}
+
+std::string Serializer::GetString(std::string name)
+{
+	XMLAttribute attribute = instance->representation.GetAttribute(name);
+	if(attribute.name == "ERR")
+	{
+		//Then the attribute doesnt exist.
+		Util::Log("[Relic][Serializer] Warning : Attribute '" + name + "' does not exist.");
+		return std::string();
+	}
+	if(attribute.GetValueType() != ValueType::String)
+	{
+		Util::Log("[Relic][Serializer] Warning : Requested deserialization of string '" + name + "'. But it is of type: '" + ValueTypeToString(attribute.GetValueType()));
+	}
+
+	return *static_cast<std::string*>(attribute.GetValue());
+}
+
+int Serializer::GetInt(std::string name)
+{
+	XMLAttribute attribute = instance->representation.GetAttribute(name);
+	if(attribute.name == "ERR")
+	{
+		//Then the attribute doesnt exist.
+		Util::Log("[Relic][Serializer] Warning : Attribute '" + name + "' does not exist.");
+		return int();
+	}
+	if(attribute.GetValueType() != ValueType::Int)
+	{
+		Util::Log("[Relic][Serializer] Warning : Requested deserialization of int '" + name + "'. But it is of type: '" + ValueTypeToString(attribute.GetValueType()));
+	}
+
+	return *static_cast<int*>(attribute.GetValue());
+}
+
+void Serializer::RegisterRelicBehaviour(std::string name, std::function<RelicBehaviour*()> creator)
+{
+	behaviour_registry.insert(std::pair<std::string, std::function<RelicBehaviour*()>>(name, creator));
+}
+
+
+std::map<std::string, std::function<RelicBehaviour*(void)>> Serializer::behaviour_registry;
 
 void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 {
@@ -247,12 +439,13 @@ Serializer::XMLObject Serializer::ReadXMLObject(std::ifstream& file)
 	XMLObject obj;
 
 	AssertLine(file, "{");
-	while(PeekLine(file) != "}")
+	while(CleanWhiteSpace(PeekLine(file)) != "}," && CleanWhiteSpace(PeekLine(file)) != "}")
 	{
 		XMLAttribute* attribute = new XMLAttribute();
 		*attribute = ReadXMLAttribute(file);
 		obj.attributes.push_back(*attribute);
 	}
+	ReadLine(file);
 	
 	return obj;
 }
@@ -274,6 +467,7 @@ Serializer::XMLAttribute Serializer::ReadXMLAttribute(std::ifstream& file)
 
 	int pos = line.find('\"');
 	std::string attr_name = line.substr(0, pos);
+	attribute.name = attr_name;
 	line = line.substr(pos + 2, line.size() - pos - 2);
 
 	std::string val = line.substr(0, line.size() - 1);
@@ -282,25 +476,44 @@ Serializer::XMLAttribute Serializer::ReadXMLAttribute(std::ifstream& file)
 	if(val[0] == '"')
 	{
 		//Then it's a string
+		attribute.SetValue(val.substr(1, val.size() - 2));
 	}
 	else if(::isdigit(val[0]))
 	{
 		//Then it's a number - we'll have to check what type
+		if(val.find('.') != -1)
+		{
+			//Then it's a float
+			attribute.SetValue(static_cast<float>(atof(val.c_str())));
+		}
+		else
+		{
+			attribute.SetValue(static_cast<int>(atoi(val.c_str())), false);
+		}
 	}
 	else if(val[0] == 'T' || val[0] == 'F')
 	{
 		//It's a bool
+		attribute.SetValue(val[0] == 'T');
 	}
 	else if(val[0] == '#')
 	{
 		//Then it's a reference
+		attribute.SetValue(static_cast<int>(atoi(val.substr(1, val.size() - 1).c_str())), false);
 	}
-	else if(val[0] == '')
+	else if(val.size() == 0)
 	{
 		//Then it might be an array - lets peek the next line
+		if(!AssertLine(file, "["))
+		{
+			return attribute;
+		}
+
+		//Lets read the array
+		attribute.SetValue(ReadXMLArray(file));
 	}
 
-	if(line[line.size() - 1] != ',')
+	if(line.size() > 0 && line[line.size() - 1] != ',')
 	{
 		Util::Log("[Relic][Core] Error : Expected comma. Got " + line + ".");
 		return attribute;
@@ -309,9 +522,144 @@ Serializer::XMLAttribute Serializer::ReadXMLAttribute(std::ifstream& file)
 	return attribute;
 }
 
-Serializer::XMLArray Serializer::ReadXMLArray(std::ifstream& file)
+Serializer::XMLArray *Serializer::ReadXMLArray(std::ifstream& file)
 {
-	return XMLArray();
+	XMLArray* arr = new XMLArray();
+
+	std::string line = PeekLine(file);
+	line = CleanWhiteSpace(line);
+
+	if(line == "]")
+	{
+		//The array is empty so lets return.
+		return arr;
+	}
+
+	ValueType type;
+	void* item;
+
+	if(line[0] == '"')
+	{
+		//Then it's a string
+		type = ValueType::String;
+		std::string* str = new std::string(line.substr(1, line.size() - 1));
+		int pos = str->find('"');
+		if(pos == -1)
+		{
+			Util::Log("[Relic][Serializer] Error : string literal was not closed correcetly. '" + line + "'.");
+			return arr;
+		}
+		*str = str->substr(0, pos);
+		arr->elements.push_back(static_cast<void*>(str));
+		ReadLine(file);
+	}
+	else if(::isdigit(line[0]))
+	{
+		//Then it's a number - we'll have to check what type
+		if(line.find('.') != -1)
+		{
+			//Then it's a float
+			type = ValueType::Float;
+			float* flt = new float();
+			*flt = atof(line.substr(0, line.size() - 1).c_str());
+			arr->elements.push_back(static_cast<void*>(flt));
+		}
+		else
+		{
+			type = ValueType::Int;
+			int* i = new int();
+			*i = atoi(line.substr(0, line.size() - 1).c_str());
+			arr->elements.push_back(static_cast<void*>(i));
+		}
+		ReadLine(file);
+	}
+	else if(line[0] == 'T' || line[0] == 'F')
+	{
+		//It's a bool
+		type = ValueType::Bool;
+		bool *b = new bool();
+		*b = line[0] == 'T';
+		arr->elements.push_back(static_cast<void*>(b));
+		ReadLine(file);
+	}
+	else if(line[0] == '#')
+	{
+		//Then it's a reference
+		type = ValueType::Reference;
+		int* id = new int();
+		*id = atoi(line.substr(1, line.size() - 2).c_str());
+		arr->elements.push_back(static_cast<void*>(id));
+		ReadLine(file);
+	}
+	else if(line[0] == '{')
+	{
+		//Then it's an XMLObject.
+		type = ValueType::XMLObject;
+		XMLObject* obj = new XMLObject();
+		*obj = ReadXMLObject(file);
+		arr->elements.push_back(static_cast<void*>(obj));
+	}
+
+	arr->type = type;
+
+	while(CleanWhiteSpace(PeekLine(file)) != "],")
+	{
+		line = CleanWhiteSpace(PeekLine(file));
+		switch (type)
+		{
+		case ValueType::Bool:
+		{
+			bool* b = new bool();
+			*b = line[0] == 'T';
+			arr->elements.push_back(static_cast<void*>(b));
+			ReadLine(file);
+			break;
+		}
+		case ValueType::Float:
+		{
+			float* f = new float();
+			*f = atof(line.substr(0, line.size() - 1).c_str());
+			arr->elements.push_back(static_cast<void*>(f));
+			ReadLine(file);
+			break;
+		}
+		case ValueType::Int:
+		{
+			int* i = new int();
+			*i = atoi(line.substr(0, line.size() - 1).c_str());
+			arr->elements.push_back(static_cast<void*>(i));
+			ReadLine(file);
+			break;
+		}
+		case ValueType::Reference:
+		{
+			int* r = new int();
+			*r = atoi(line.substr(1, line.size() - 2).c_str());
+			arr->elements.push_back(static_cast<void*>(r));
+			ReadLine(file);
+			break;
+		}
+		case ValueType::String:
+		{
+			std::string *s = new std::string();
+			*s = line.substr(1, line.size() - 2);
+			arr->elements.push_back(static_cast<void*>(s));
+			ReadLine(file);
+			break;
+		}
+		case ValueType::XMLObject:
+		{
+			XMLObject * obj = new XMLObject();
+			*obj = ReadXMLObject(file);
+			arr->elements.push_back(static_cast<void*>(obj));
+			break;
+		}
+		}
+	}
+
+	ReadLine(file);
+	return arr;
+	
 }
 
 void Serializer::AddAttribute(XMLObject& obj, XMLAttribute& attribute)
@@ -369,7 +717,7 @@ Serializer::XMLAttribute Serializer::ConstructArrayAttribute(std::string name, X
 
 void Serializer::WriteID(XMLObject& obj)
 {
-	XMLAttribute attrib = ConstructFloatAttribute("id", id);
+	XMLAttribute attrib = ConstructFloatAttribute("_id_", id);
 	id++;
 	AddAttribute(obj, attrib);
 }
@@ -477,6 +825,33 @@ const std::type_info& Serializer::XMLAttribute::GetType()
 	}
 }
 
+void Serializer::XMLAttribute::Delete()
+{
+	if(type == ValueType::XMLArray)
+	{
+		Serializer::DeleteXMLArray(value_xa);
+	}
+
+	else if(type == ValueType::XMLObject)
+	{
+		Serializer::DeleteXMLObject(value_xo);
+	}
+}
+
+Serializer::XMLAttribute Serializer::XMLObject::GetAttribute(std::string name)
+{
+	for(XMLAttribute attr : attributes)
+	{
+		if(attr.name == name)
+		{
+			return attr;
+		}
+	}
+	XMLAttribute attr;
+	attr.name = "ERR";
+	return attr;
+}
+
 void Serializer::WriteXMLObject(XMLObject obj, int indent)
 {
 	std::string ind = std::string(indent, ' ');
@@ -498,13 +873,21 @@ void Serializer::WriteXMLAttribute(XMLAttribute attrib, int indent)
 	XMLObject* obj;
 	XMLArray* arr;
 
+	bool add_decimal = false;
+	float flt;
 	switch (type)
 	{
 	case ValueType::String: 
 		ofs << ind << "\"" << attrib.name << "\": \"" << *static_cast<std::string*>(attrib.GetValue()) << "\"";
 		break;
 	case ValueType::Float: 
-		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<float*>(attrib.GetValue());
+		flt = *static_cast<float*>(attrib.GetValue());
+		if(fabsf(roundf(flt) - flt) < 0.00001f)
+		{
+			//Then its a round number so lets add a decmial place to it.
+			add_decimal = true;
+		}
+		ofs << ind << "\"" << attrib.name << "\": " << *static_cast<float*>(attrib.GetValue()) << (add_decimal ? ".0" : "");
 		break;
 	case ValueType::Bool:
 		ofs << ind << "\"" << attrib.name << "\": " << (*static_cast<bool*>(attrib.GetValue()) ? "T" : "F");

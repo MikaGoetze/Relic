@@ -1,15 +1,13 @@
 ﻿#ifndef GAME_OBJECT_H
 #define GAME_OBJECT_H
 #include <vector>
-#include <Core/RelicBehaviour.h>
 #include <Core/Util.h>
 
-class GameObject : Serializable
+class RelicBehaviour;
+
+class GameObject
 {
 public:
-	void Serialize() override;
-	void Deserialize() override;
-
 	GameObject();
 	GameObject(std::string name);
 	~GameObject();
@@ -19,6 +17,9 @@ public:
 
 	template<typename T>
 	T* AddComponent();
+
+	template<typename T>
+	void AddComponent(T* behaviour);
 
 	std::string& Name;
 private:
@@ -54,6 +55,17 @@ T* GameObject::AddComponent()
 	behaviours.push_back(component);
 	return component;
 
+}
+
+template <typename T>
+void GameObject::AddComponent(T* behaviour)
+{
+	if(!std::is_base_of<RelicBehaviour, T>())
+	{
+		Util::Log("[Relic][GameObject] Error : Attempting to add non RelicBehaviour '" + std::string(typeid(T).name()) + "' to GameObject.");
+		return;
+	}
+	behaviours.push_back(behaviour);
 }
 
 #endif

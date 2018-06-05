@@ -31,11 +31,6 @@ void Util::SuccessExit()
 	do c = getchar(); while ((c != '\n') && (c != EOF));
 }
 
-std::string Util::GetClassName(RelicBehaviour* behaviour)
-{
-	return typeid(*behaviour).name();
-}
-
 void Util::Log(std::string log)
 {
 	std::ofstream ofs;

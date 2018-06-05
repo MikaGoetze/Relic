@@ -1,6 +1,5 @@
 #include "Test.h"
 #include <iostream>
-#include "Core/Serializer.h"
 
 void Test::Serialize()
 {
@@ -13,7 +12,13 @@ void Test::Serialize()
 
 void Test::Deserialize()
 {
+	b = Serializer::GetBool("b");
+	f = Serializer::GetFloat("f");
+	ia = Serializer::GetVector<float>("ia");
+	others = Serializer::GetVector<Test>("others");
 }
+
+BehaviourRegistrar<Test> Test::registrar("Test");
 
 Test::Test()
 {

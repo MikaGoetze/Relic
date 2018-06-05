@@ -102,7 +102,7 @@ void Relic::Exit()
 	glfwSetWindowShouldClose(instance->Window->InternalWindow(), true);
 	for (auto& behaviour : *instance->behaviours)
 	{
-		Util::Log("[Relic][Core] Cleaning up " + Util::GetClassName(behaviour) + ".");
+		Util::Log("[Relic][Core] Cleaning up " + RelicBehaviour::GetClassName(behaviour) + ".");
 		delete behaviour;
 	}
 	instance->gameRunning = false;
@@ -115,7 +115,7 @@ void Relic::RegisterBehaviour(RelicBehaviour* behaviour)
 
 void Relic::Register(RelicBehaviour* behaviour)
 {
-	Util::Log("[Relic][Core] Registered " + Util::GetClassName(behaviour));
+	Util::Log("[Relic][Core] Registered " + RelicBehaviour::GetClassName(behaviour));
 	behaviours->push_back(behaviour);
 }
 

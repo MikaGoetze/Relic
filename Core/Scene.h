@@ -1,6 +1,9 @@
 ﻿#ifndef SCENE_H
 #define SCENE_H
-#include "GameObject.h"
+
+#include <vector>
+#include <string>
+#include <Core/GameObject.h>
 
 class Scene
 {

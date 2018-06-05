@@ -1,14 +1,5 @@
 ﻿#include "GameObject.h"
 
-void GameObject::Serialize()
-{
-
-}
-
-void GameObject::Deserialize()
-{
-}
-
 GameObject::GameObject() : Name(name)
 {
 	behaviours = std::vector<RelicBehaviour*>();
