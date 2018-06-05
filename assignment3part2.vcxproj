@@ -153,6 +153,7 @@
   <ItemGroup>
     <ClInclude Include="Camera\Camera.h" />
     <ClInclude Include="Camera\FPSCamera.h" />
+    <ClInclude Include="Core\BehaviourRegistrar.h" />
     <ClInclude Include="Core\GameObject.h" />
     <ClInclude Include="Core\Input.h" />
     <ClInclude Include="Core\RelicBehaviour.h" />
@@ -176,6 +177,7 @@
     <ClInclude Include="Texturing\Texture.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Core\BehaviourRegistrar.cpp" />
     <ClCompile Include="Core\GameObject.cpp" />
     <ClCompile Include="Core\Scene.cpp" />
     <ClCompile Include="Core\Serializable.cpp" />

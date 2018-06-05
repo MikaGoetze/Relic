@@ -64,7 +64,6 @@ void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
 			//Lets figure out what kind of behaviour it is and then pass it off to be deserialized
 			std::string behaviour_type = *static_cast<std::string*>(obj_behaviour->GetAttribute("_type_").GetValue());
 			//TODO: Remove this
-			Util::Log("Deserializing : " + behaviour_type);
 
 			RelicBehaviour* behaviour = CreateRelicBehaviour(behaviour_type);
 
@@ -456,7 +455,6 @@ Serializer::XMLAttribute Serializer::ReadXMLAttribute(std::ifstream& file)
 	XMLAttribute attribute;
 	std::string line = ReadLine(file);
 	line = CleanWhiteSpace(line);
-	Util::Log(line);
 
 	if(line[0] != '"')
 	{
