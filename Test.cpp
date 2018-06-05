@@ -18,7 +18,7 @@ void Test::Deserialize()
 	others = Serializer::GetVector<Test>("others");
 }
 
-BehaviourRegistrar<Test> Test::registrar("Test");
+BehaviourRegistrar<Test> Test::registrar;
 
 Test::Test()
 {

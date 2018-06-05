@@ -1,2 +1,3 @@
 [Relic][Core] Initialised Engine. Starting game loop...
-[Relic][Core] Serializing class Test
+[Relic][Serializer] Error : Class 'Test' has not been registered and will not be loaded.
+[Relic][Serializer] Error : Class 'Test' has not been registered and will not be loaded.

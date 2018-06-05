@@ -83,6 +83,10 @@ void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
 	for(Reference ref : References)
 	{
 		RelicBehaviour* behaviour = static_cast<RelicBehaviour*>(ref.pointer);
+		if(behaviour == NULL)
+		{
+			continue;
+		}
 		//Prepare for deserialization
 		representation = *ref.xml_obj;
 
@@ -92,7 +96,15 @@ void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
 
 RelicBehaviour* Serializer::CreateRelicBehaviour(std::string type)
 {
-	return behaviour_registry.at(type)();
+	try {
+		return behaviour_registry.at(type)();
+	}
+	catch(std::exception e)
+	{
+		Util::Log("[Relic][Serializer] Error : Class '" + type + "' has not been registered and will not be loaded.");
+		return NULL;
+	}
+
 }
 
 RelicBehaviour* Serializer::GetReferenceByID(int id)

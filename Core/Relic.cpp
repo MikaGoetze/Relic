@@ -118,7 +118,3 @@ void Relic::Register(RelicBehaviour* behaviour)
 	Util::Log("[Relic][Core] Registered " + RelicBehaviour::GetClassName(behaviour));
 	behaviours->push_back(behaviour);
 }
-
-
-
-

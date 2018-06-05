@@ -6,18 +6,21 @@
 
 class Test : public RelicBehaviour
 {
+private:
+	static BehaviourRegistrar<Test> registrar;
+
 protected:
 
 	void Serialize() override;
 	void Deserialize() override;
 
-	static BehaviourRegistrar<Test> registrar;
 public:
 	Test();
 	~Test();
 
 	virtual void Update();
 	virtual void Start();
+
 
 	bool b;
 	float f;

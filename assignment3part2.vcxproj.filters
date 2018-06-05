@@ -152,8 +152,5 @@
     <ClCompile Include="Core\Serializer.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Core\BehaviourRegistrar.cpp">
-      <Filter>Header Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

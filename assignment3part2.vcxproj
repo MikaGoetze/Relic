@@ -177,7 +177,6 @@
     <ClInclude Include="Texturing\Texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Core\BehaviourRegistrar.cpp" />
     <ClCompile Include="Core\GameObject.cpp" />
     <ClCompile Include="Core\Scene.cpp" />
     <ClCompile Include="Core\Serializable.cpp" />
