@@ -29,6 +29,8 @@ public:
 
 	static float GetDeltaTime();
 
+	static Shader* GetStandardShader();
+
 private:
 	static Relic* instance;
 	Window* Window;

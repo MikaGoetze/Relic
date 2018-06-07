@@ -122,7 +122,7 @@ void Relic::Start()
 	}
 
 	//Load the standard shader
-	standard_shader = new Shader("Lighting/Shaders/light-shading.vert", "Lighting/Shaders/light-shading.frag");
+	standard_shader = new Shader("Lighting/Shaders/standard.vert", "Lighting/Shaders/standard.frag");
 
 	//Initialise input
 	Input::Instance = new Input(Window->InternalWindow());
@@ -152,4 +152,9 @@ void Relic::LoadScene(Scene* scene)
 float Relic::GetDeltaTime()
 {
 	return instance->deltaTime;
+}
+
+Shader* Relic::GetStandardShader()
+{
+	return instance->standard_shader;
 }

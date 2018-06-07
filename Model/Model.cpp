@@ -189,7 +189,7 @@ float* Model::GenerateArray(unsigned int obj_index)
 {
 	tinyobj::mesh_t mesh = shapes.at(obj_index).mesh;
 
-	float * data = new float[mesh.num_face_vertices.size() * 8 * 3];
+	float * data = new float[mesh.num_face_vertices.size() * 11 * 3];
 	for(int i = 0; i < mesh.num_face_vertices.size() * 3; i++)
 	{
 		int index = 8 * i;
@@ -216,6 +216,9 @@ float* Model::GenerateArray(unsigned int obj_index)
 			data[index + 7] = attrib->texcoords.at(2 * mesh.indices.at(i).texcoord_index + 1);
 		}
 		catch (std::out_of_range exception){}
+
+		//Tangent calculation
+		data[index + 8] =  
 
 	}
 
