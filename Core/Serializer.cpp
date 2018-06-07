@@ -734,7 +734,7 @@ Serializer::XMLAttribute Serializer::ConstructArrayAttribute(std::string name, X
 
 void Serializer::WriteID(XMLObject& obj)
 {
-	XMLAttribute attrib = ConstructFloatAttribute("_id_", id);
+	XMLAttribute attrib = ConstructIntAttribute("_id_", id);
 	id++;
 	AddAttribute(obj, attrib);
 }

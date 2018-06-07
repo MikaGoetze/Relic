@@ -53,7 +53,8 @@ void Transform::Serialize()
 	Serializer::AddFloat("rz", rz);
 	Serializer::AddFloat("rw", rw);
 
-	Serializer::AddReference("parent", parent);
+	if(parent != NULL)
+		Serializer::AddReference("parent", parent);
 	Serializer::AddVector("children", children);
 }
 
