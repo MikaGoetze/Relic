@@ -128,6 +128,11 @@ private:
 	void OpenOutputFile(std::string file);
 	void CloseOutputFile();
 
+	void CreateXMLRepresentation();
+	static void RegisterRelicBehaviour(std::string nam, std::function<RelicBehaviour*(void)> creator);
+
+	template<typename T>
+	friend class BehaviourRegistrar;
 
 	int GetIDByPointer(void* pointer);
 
@@ -146,8 +151,6 @@ public:
 
 	Scene* LoadScene(std::string filepath);
 
-	void CreateXMLRepresentation();
-
 	static void AddFloat(std::string name, float& val);
 	static void AddString(std::string name, std::string& val);
 	static void AddBool(std::string name, bool& val);
@@ -157,9 +160,6 @@ public:
 	static float GetFloat(std::string name);
 	static std::string GetString(std::string name);
 	static int GetInt(std::string name);
-
-
-	static void RegisterRelicBehaviour(std::string nam, std::function<RelicBehaviour*(void)> creator);
 
 	template<typename T>
 	static void AddVector(std::string name, std::vector<T*>& val);
@@ -172,7 +172,6 @@ public:
 
 	template<typename T>
 	static void AddReference(std::string name, T* val);
-
 };
 
 template <typename T>
@@ -268,7 +267,7 @@ T* Serializer::GetReference(std::string name)
 		return NULL;
 	}
 
-	return static_cast<T*>(GetReferenceByID(*static_cast<int*>(attribute.GetValue())));
+	return static_cast<T*>(instance->GetReferenceByID(*static_cast<int*>(attribute.GetValue())));
 }
 
 template <typename T>

@@ -57,6 +57,8 @@ void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
 		XMLObject* game_obj = static_cast<XMLObject*>(game_object);
 		GameObject* go = new GameObject();
 
+		go->name = *static_cast<std::string*>(game_obj->GetAttribute("name").GetValue());
+
 		for (void* behaviour_void : static_cast<XMLArray*>(game_obj->GetAttribute("behaviours").GetValue())->elements)
 		{
 			XMLObject* obj_behaviour = static_cast<XMLObject*>(behaviour_void);
@@ -331,7 +333,7 @@ int Serializer::GetInt(std::string name)
 	if(attribute.GetValueType() != ValueType::Int)
 	{
 		Util::Log("[Relic][Serializer] Warning : Requested deserialization of int '" + name + "'. But it is of type: '" + ValueTypeToString(attribute.GetValueType()));
-	}
+	};
 
 	return *static_cast<int*>(attribute.GetValue());
 }
@@ -354,6 +356,11 @@ void Serializer::WriteGO(GameObject* go, XMLArray& obj_array)
 	array_attribute.name = "behaviours";
 	array_attribute.SetValue(behaviours);
 
+	XMLAttribute name_attribute = XMLAttribute();
+	name_attribute.name = "name";
+	name_attribute.SetValue(go->name);
+
+	gameObj->attributes.push_back(name_attribute);
 	gameObj->attributes.push_back(array_attribute);
 
 	for(RelicBehaviour* behaviour : go->behaviours)

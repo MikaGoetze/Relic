@@ -4,11 +4,11 @@
 #include <Core/Util.h>
 
 class RelicBehaviour;
+class Transform;
 
 class GameObject
 {
 public:
-	GameObject();
 	GameObject(std::string name);
 	~GameObject();
 
@@ -21,8 +21,16 @@ public:
 	template<typename T>
 	void AddComponent(T* behaviour);
 
+	Transform* transform;
+
 	std::string& Name;
 private:
+
+	GameObject();
+
+	template<typename T>
+	bool ContainsBehaviourType();
+
 	std::string name;
 	std::vector<RelicBehaviour*> behaviours;
 	friend class Serializer;
@@ -66,6 +74,19 @@ void GameObject::AddComponent(T* behaviour)
 		return;
 	}
 	behaviours.push_back(behaviour);
+}
+
+template <typename T>
+bool GameObject::ContainsBehaviourType()
+{
+	for(RelicBehaviour* behaviour : behaviours)
+	{
+		if(typeid(behaviour).name() == typeid(T).name())
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 #endif
