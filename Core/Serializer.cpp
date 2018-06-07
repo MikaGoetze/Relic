@@ -65,9 +65,9 @@ void Serializer::ReconstructScene(Scene* scene, XMLObject& scene_obj)
 
 			//Lets figure out what kind of behaviour it is and then pass it off to be deserialized
 			std::string behaviour_type = *static_cast<std::string*>(obj_behaviour->GetAttribute("_type_").GetValue());
-			//TODO: Remove this
 
 			RelicBehaviour* behaviour = CreateRelicBehaviour(behaviour_type);
+			behaviour->SetGameObject(go);
 
 			Reference ref{};
 			ref.id = *static_cast<int*>(obj_behaviour->GetAttribute("_id_").GetValue());

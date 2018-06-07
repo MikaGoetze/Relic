@@ -118,7 +118,3 @@ glm::quat Transform::GetLocalRotation()
 {
 	return localRotation;
 }
-
-Transform::Transform()
-{
-}

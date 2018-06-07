@@ -107,14 +107,3 @@ void Relic::Exit()
 	}
 	instance->gameRunning = false;
 }
-
-void Relic::RegisterBehaviour(RelicBehaviour* behaviour)
-{
-	instance->Register(behaviour);
-}
-
-void Relic::Register(RelicBehaviour* behaviour)
-{
-	Util::Log("[Relic][Core] Registered " + RelicBehaviour::GetClassName(behaviour));
-	behaviours->push_back(behaviour);
-}

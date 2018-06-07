@@ -25,7 +25,7 @@ void Model::LoadModel(std::string filepath)
 	{
 		Util::Log("[Relic][Model] Warning : Attempting to overwrite model. Ignoring...");
 	}
-
+	model_path = filepath;
 
 	std::string err;
 	std::string mat_directory = filepath.substr(0, filepath.find_last_of('/') + 1);
@@ -41,20 +41,17 @@ void Model::LoadModel(std::string filepath)
 	vaos = std::vector<unsigned int>(shapes.size());
 	vbos = std::vector<unsigned int>(shapes.size());
 	on_gpu = std::vector<bool>(shapes.size());
-	texs = std::vector<Texture>(materials.size());
+	albedoTexs = std::vector<Texture>(materials.size());
 
 	//Lets load the textures in
-	for(int i = 0; i < materials.size(); i++)
+	for (int i = 0; i < materials.size(); i++)
 	{
 		tinyobj::material_t mat = GetMaterial(i);
-		if (mat.diffuse_texname == "")
-		{
-			texs.at(i) = Texture();
-			continue;
-		}
-		int ind = mat.diffuse_texname.find('.');
-		std::string filetype = mat.diffuse_texname.substr(ind, mat.diffuse_texname.size() - ind);
-		texs.at(i) = Texture(mat_directory + mat.diffuse_texname, filetype == ".png" ? GL_RGBA : GL_RGB);
+		//Load the PBR textures
+		LoadTexture(albedoTexs, i, mat.diffuse_texname, mat_directory);
+		LoadTexture(normalTexs, i, mat.normal_texname, mat_directory);
+		LoadTexture(metallicTexs, i, mat.metallic_texname, mat_directory);
+		LoadTexture(roughnessTexs, i, mat.roughness_texname, mat_directory);
 	}
 
 	model_loaded = true;
@@ -139,7 +136,27 @@ int Model::GetNumVertices(unsigned int obj_index)
 
 int Model::GetTexID(unsigned obj_index)
 {
-	return texs.at(obj_index).ID();
+	return albedoTexs.at(obj_index).ID();
+}
+
+int Model::GetNormalTexID(unsigned obj_index)
+{
+	return normalTexs.at(obj_index).ID();
+}
+
+int Model::GetMetallicTexID(unsigned obj_index)
+{
+	return metallicTexs.at(obj_index).ID();
+}
+
+int Model::GetRoughnessTexID(unsigned obj_index)
+{
+	return roughnessTexs.at(obj_index).ID();
+}
+
+std::string Model::GetModelPath()
+{
+	return model_path;
 }
 
 tinyobj::material_t Model::GetMaterial(unsigned obj_index)
@@ -151,6 +168,18 @@ tinyobj::material_t Model::GetMaterial(unsigned obj_index)
 	return materials.at(ind);
 }
 
+
+void Model::LoadTexture(std::vector<Texture>& tex_vec, int i, std::string filepath, std::string dir)
+{
+	if (filepath.empty())
+	{
+		Util::Log("[Relic][Model] Warning : Texture does not exist. Check that all models have appropriate PBR textures.");
+		tex_vec.at(i) = Texture();
+	}
+	int ind = filepath.find('.');
+	std::string filetype = filepath.substr(ind, filepath.size() - ind);
+	tex_vec.at(i) = Texture(dir + filepath, filetype == ".png" ? GL_RGBA : GL_RGB);
+}
 
 float* Model::GenerateArray(unsigned int obj_index)
 {

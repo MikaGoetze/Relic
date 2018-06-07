@@ -28,6 +28,11 @@ public:
 	int GetNumShapes();
 	int GetNumVertices(unsigned int obj_index);
 	int GetTexID(unsigned int obj_index);
+	int GetNormalTexID(unsigned int obj_index);
+	int GetMetallicTexID(unsigned int obj_index);
+	int GetRoughnessTexID(unsigned int obj_index);
+
+	std::string GetModelPath();
 
 	tinyobj::material_t GetMaterial(unsigned int obj_index);
 
@@ -39,11 +44,18 @@ private:
 	std::vector<bool> on_gpu;
 	std::vector<unsigned int> vaos;
 	std::vector<unsigned int> vbos;
-	std::vector<Texture> texs;
+	std::vector<Texture> albedoTexs;
+	std::vector<Texture> normalTexs;
+	std::vector<Texture> metallicTexs;
+	std::vector<Texture> roughnessTexs;
+
+	void LoadTexture(std::vector<Texture>& tex_vec, int i, std::string filepath, std::string dir);
 
 	float x_min, x_max, y_min, y_max, z_min, z_max;
 
 	float* GenerateArray(unsigned int obj_index);
+
+	std::string model_path;
 };
 
 #endif //MODEL_H

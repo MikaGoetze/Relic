@@ -8,6 +8,8 @@
 //Inspiration taken from Joey de Vries (www.learnopengl.com)
 class Shader
 {
+private:
+	std::string v_path, f_path;
 public:
 	unsigned int shader_id;
 	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
@@ -18,6 +20,9 @@ public:
 	void SetVec4(const std::string &name, float x, float y, float z, float w = 1) const;
 	void SetVec3(const std::string &name, float x, float y, float z) const;
 	void SetVec3(const std::string &name, glm::vec3 vector) const;
+
+	std::string GetFragmentPath();
+	std::string GetVertexPath();
 
 	void SetMat4(const std::string &name, glm::mat4 mat) const;
 	~Shader();

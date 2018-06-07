@@ -35,8 +35,6 @@ public:
 	void SetLocalRotation(glm::quat lq);
 	glm::quat GetLocalRotation();
 
-	Transform();
-	
 };
 
 #endif

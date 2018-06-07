@@ -43,7 +43,7 @@ T* GameObject::GetComponent()
 	{
 		if(typeid(behaviour) == typeid(T))
 		{
-			return behaviour;
+			return static_cast<T*>(behaviour);
 		}
 	}
 
@@ -61,6 +61,7 @@ T* GameObject::AddComponent()
 
 	T* component = new T();
 	behaviours.push_back(component);
+
 	return component;
 
 }

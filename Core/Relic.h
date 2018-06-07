@@ -20,7 +20,6 @@ public:
 	~Relic();
 
 	static Window* GetWindow() { return instance->Window; }
-	static void RegisterBehaviour(RelicBehaviour* behaviour);
 	static void Exit();
 
 private:
@@ -31,7 +30,6 @@ private:
 	void GameLoop();
 	void Update();
 	void Start();
-	void Register(RelicBehaviour* behaviour);
 
 	std::vector<RelicBehaviour*> * behaviours;
 };

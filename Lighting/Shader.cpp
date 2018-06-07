@@ -9,6 +9,9 @@
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
+	v_path = vertexPath;
+	f_path = fragmentPath;
+
 	std::string vertex_code;
 	std::string fragment_code;
 	std::ifstream vertex_shader_file;
@@ -116,6 +119,16 @@ void Shader::SetVec3(const std::string &name, float x, float y, float z) const
 void Shader::SetVec3(const std::string& name, glm::vec3 vector) const
 {
 	glUniform3f(glGetUniformLocation(shader_id, name.c_str()), vector.x, vector.y, vector.z);
+}
+
+std::string Shader::GetFragmentPath()
+{
+	return f_path;
+}
+
+std::string Shader::GetVertexPath()
+{
+	return v_path;
 }
 
 void Shader::SetMat4(const std::string& name, glm::mat4 mat) const
