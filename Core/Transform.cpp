@@ -85,8 +85,16 @@ glm::vec3 Transform::GetPosition()
 
 void Transform::SetPosition(glm::vec3 pos)
 {
-	glm::vec3 parentPos = parent->GetPosition();
-	localPosition += (pos - parentPos) - (localPosition);
+	if(parent == NULL)
+	{
+		localPosition = pos;
+	}
+	else
+	{
+		glm::vec3 parentPos = parent->GetPosition();
+		localPosition += (pos - parentPos) - (localPosition);
+	}
+	Update();
 }
 
 glm::vec3 Transform::GetLocalPosition()
@@ -101,7 +109,15 @@ void Transform::SetLocalPosition(glm::vec3 pos)
 
 void Transform::SetRotation(glm::quat q)
 {
-	localRotation = q * glm::inverse(parent->GetRotation()); 
+	if(parent == NULL)
+	{
+		localRotation = q;
+	}
+	else
+	{
+		localRotation = q * glm::inverse(parent->GetRotation()); 
+	}
+
 }
 
 glm::quat Transform::GetRotation()

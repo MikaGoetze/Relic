@@ -39,6 +39,7 @@ bool Window::Initialise(int width, int height, std::string title, bool windowed,
 	}
 
 	glfwMakeContextCurrent(window);
+	glViewport(0, 0, windowWidth, windowHeight);
 
 	initialised = true;
 	return true;
@@ -74,6 +75,7 @@ bool Window::Initialise(std::string title, int monitor)
 
 	window = glfwCreateWindow(vidMode->width, vidMode->height, title.c_str(), monitors[monitor], NULL);
 	glfwMakeContextCurrent(window);
+	glViewport(0, 0, windowWidth, windowHeight);
 
 	initialised = true;
 	return true;

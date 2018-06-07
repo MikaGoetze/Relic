@@ -2,13 +2,35 @@
 #include <glm/gtc/matrix_transform.inl>
 
 
+void Camera::Serialize()
+{
+}
+
+void Camera::Deserialize()
+{
+}
+
 Camera::Camera()
 {
 	//Lets just initiallise this stuff to start with
-	cameraPos = glm::vec3(0.0f, 0.0f, -3.0f);
 
+	if(main == NULL)
+	{
+		main = this;
+	}
+}
+
+Camera* Camera::main;
+
+Camera::~Camera()
+{
+}
+
+void Camera::Start()
+{
+	transform = GetGameObject()->GetComponent<Transform>();
 	glm::vec3 target = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 cameraDir = glm::normalize(cameraPos - target);
+	glm::vec3 cameraDir = glm::normalize(transform->GetPosition() - target);
 	
 	right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), cameraDir));
 	up = glm::cross(cameraDir, right);
@@ -17,21 +39,11 @@ Camera::Camera()
 }
 
 
-
-Camera::~Camera()
-{
-}
-
-
 void Camera::RotateAround(glm::vec3 rot, glm::vec3 target)
 {
 	view = glm::lookAt(rot, target, glm::vec3(0,1,0));
 }
 
-void Camera::SetPosition(glm::vec3 position)
-{
-	cameraPos = position;
-}
 
 void Camera::SetDirection(glm::vec3 direction)
 {
@@ -50,15 +62,10 @@ void Camera::SetDirectionEuler(glm::vec2 euler)
 
 const glm::mat4& Camera::GetView()
 {
-	view = glm::lookAt(cameraPos, cameraPos + cameraFront, up );
+	view = glm::lookAt(transform->GetPosition(), transform->GetPosition() + cameraFront, up );
 	right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), -cameraFront));
 	up = glm::normalize(glm::cross(right, cameraFront));
 	return view;
-}
-
-const glm::vec3& Camera::GetPosition()
-{
-	return cameraPos;
 }
 
 const glm::vec3& Camera::GetDirection()

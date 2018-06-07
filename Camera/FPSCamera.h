@@ -3,17 +3,19 @@
 #include "Camera.h"
 #include <GLFW/glfw3.h> 
 #include <glm/gtc/type_ptr.hpp>
+#include <Core/RelicBehaviour.h>
 
-class FPSCamera
+class FPSCamera : public RelicBehaviour
 {
 public:
+	void Start() override;
+	void Serialize() override;
+	void Deserialize() override;
 	FPSCamera(bool mouse_controls = true);
 
 	void SetSensitivity(float sens);
 	void Rotate(float yaw, float pitch);
 	const glm::mat4& GetView();
-	const glm::vec3& GetPosition();
-	void SetPosition(glm::vec3 position);
 	const glm::vec3& GetDirection();
 	const glm::vec3& GetUp();
 	const glm::vec3& GetRight();

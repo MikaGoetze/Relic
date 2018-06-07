@@ -42,6 +42,9 @@ void Model::LoadModel(std::string filepath)
 	vbos = std::vector<unsigned int>(shapes.size());
 	on_gpu = std::vector<bool>(shapes.size());
 	albedoTexs = std::vector<Texture>(materials.size());
+	normalTexs = std::vector<Texture>(materials.size());
+	metallicTexs = std::vector<Texture>(materials.size());
+	roughnessTexs = std::vector<Texture>(materials.size());
 
 	//Lets load the textures in
 	for (int i = 0; i < materials.size(); i++)
@@ -175,6 +178,7 @@ void Model::LoadTexture(std::vector<Texture>& tex_vec, int i, std::string filepa
 	{
 		Util::Log("[Relic][Model] Warning : Texture does not exist. Check that all models have appropriate PBR textures.");
 		tex_vec.at(i) = Texture();
+		return;
 	}
 	int ind = filepath.find('.');
 	std::string filetype = filepath.substr(ind, filepath.size() - ind);

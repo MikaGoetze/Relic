@@ -26,6 +26,8 @@ public:
 	std::string& Name;
 private:
 
+	bool has_started = false;
+	friend class Scene;
 	GameObject();
 
 	template<typename T>
@@ -41,7 +43,7 @@ T* GameObject::GetComponent()
 {
 	for (RelicBehaviour* behaviour : behaviours)
 	{
-		if(typeid(behaviour) == typeid(T))
+		if(typeid(*behaviour) == typeid(T))
 		{
 			return static_cast<T*>(behaviour);
 		}

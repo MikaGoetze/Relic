@@ -3,9 +3,9 @@
 #include <Core/RelicBehaviour.h>
 #include <Core/Input.h>
 #include "Util.h"
+#include <glm/gtc/matrix_transform.inl>
 
 Relic * Relic::instance;
-
 
 Relic::Relic()
 {
@@ -24,7 +24,7 @@ Relic::Relic()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	
-	glewInit();
+	
 
 	Window = new ::Window();
 	behaviours = new std::vector<RelicBehaviour*>();
@@ -58,6 +58,11 @@ void Relic::GameLoop()
 
 void Relic::Update()
 {
+	//Calculate delta time
+	float currentFrame = glfwGetTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+
 	if (Window->ShouldClose()) {
 		gameRunning = false;
 		return;
@@ -65,6 +70,8 @@ void Relic::Update()
 
 	if(Input::Instance != NULL)
 		Input::Update();
+
+	currentScene->Update();
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -74,6 +81,18 @@ void Relic::Update()
 
 	//Do rendering stuff here.
 
+	glm::mat4 view = Camera::main->GetView();
+	glm::mat4 projection = glm::perspective(45.0f, (float) Window->WindowWidth() / Window->WindowHeight(), 0.05f, 100.0f);
+	standard_shader->SetActive();
+	standard_shader->SetMat4("view", view);
+	standard_shader->SetMat4("projection", projection);
+	standard_shader->SetVec3("viewPos", Camera::main->GetGameObject()->GetComponent<Transform>()->GetPosition());
+
+	glEnable(GL_DEPTH_TEST);
+	glCullFace(GL_BACK);
+
+	if(currentScene != NULL)
+		currentScene->Render(standard_shader);
 
 	//We're done rendering, lets swap the buffers
 	glfwSwapBuffers(Window->InternalWindow());
@@ -93,8 +112,25 @@ void Relic::Start()
 		Util::ErrorExit();
 	}
 
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+	if(err != GLEW_OK)
+	{
+		Util::Log("[Relic][Core] Error : Glew init failed. Extiting...");
+		std::cout << "ERR : " << glewGetErrorString(err) << std::endl;
+		exit(-1);
+	}
+
+	//Load the standard shader
+	standard_shader = new Shader("Lighting/Shaders/light-shading.vert", "Lighting/Shaders/light-shading.frag");
+
 	//Initialise input
 	Input::Instance = new Input(Window->InternalWindow());
+
+	RelicStart();
+
+	//We presume a scene has been loaded, lets start it.
+	currentScene->Start();
 }
 
 void Relic::Exit()
@@ -106,4 +142,14 @@ void Relic::Exit()
 		delete behaviour;
 	}
 	instance->gameRunning = false;
+}
+
+void Relic::LoadScene(Scene* scene)
+{
+	instance->currentScene = scene;
+}
+
+float Relic::GetDeltaTime()
+{
+	return instance->deltaTime;
 }

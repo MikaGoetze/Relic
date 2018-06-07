@@ -4,16 +4,9 @@
 
 FPSCamera* FPSCamera::instance;
 
-FPSCamera::FPSCamera(bool mouse_controls)
+void FPSCamera::Start()
 {
-	if (instance != NULL)
-	{
-		delete instance;
-	}
-	instance = this;
-	if(mouse_controls)
-		glfwSetCursorPosCallback(Relic::GetWindow()->InternalWindow(), process_mouse_input_static);
-	cam = new Camera();
+	cam = GetGameObject()->GetComponent<Camera>();
 	sensitivity = 0.5f;
 	lastMouseX = 0;
 	lastMouseY = 0;
@@ -22,6 +15,28 @@ FPSCamera::FPSCamera(bool mouse_controls)
 	pitch = 0;
 
 	firstMouse = true;
+}
+
+void FPSCamera::Serialize()
+{
+}
+
+void FPSCamera::Deserialize()
+{
+}
+
+FPSCamera::FPSCamera(bool mouse_controls)
+{
+	if (instance != NULL)
+	{
+		delete instance;
+	}
+	instance = this;
+	
+	if (mouse_controls) {
+		glfwSetCursorPosCallback(Relic::GetWindow()->InternalWindow(), process_mouse_input_static);
+		glfwSetInputMode(Relic::GetWindow()->InternalWindow(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	}
 }
 
 FPSCamera::~FPSCamera()
@@ -82,16 +97,6 @@ void FPSCamera::Rotate(float y, float p)
 const glm::mat4& FPSCamera::GetView()
 {
 	return cam->GetView();
-}
-
-const glm::vec3& FPSCamera::GetPosition()
-{
-	return cam->GetPosition();
-}
-
-void FPSCamera::SetPosition(glm::vec3 position)
-{
-	cam->SetPosition(position);
 }
 
 const glm::vec3& FPSCamera::GetDirection()

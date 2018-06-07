@@ -1,4 +1,5 @@
 ﻿#include "Input.h"
+#include "Util.h"
 
 Input::~Input()
 {
@@ -68,7 +69,7 @@ Input::Input(GLFWwindow* window)
 	}
 }
 
-bool Input::GetKey(unsigned key_code)
+bool Input::GetKey(unsigned int key_code)
 {
 	return Instance->keys_pressed.at(key_code);
 }
