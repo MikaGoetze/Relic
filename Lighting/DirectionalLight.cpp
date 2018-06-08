@@ -1,7 +1,7 @@
 ﻿#include "DirectionalLight.h"
 #include <iostream>
 
-DirectionalLight::DirectionalLight(glm::vec3 dir, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec, Shader* shader) : Light("sun", amb, diff, spec, shader)
+DirectionalLight::DirectionalLight(glm::vec3 dir, glm::vec3 color, float intensity, Shader* shader) : Light("sun", color, intensity, shader)
 {
 	direction = dir;
 	DirectionalLight::Initialise();

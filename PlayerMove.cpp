@@ -12,7 +12,7 @@ void PlayerMove::Deserialize()
 
 void PlayerMove::Update()
 {
-	float speed = 2 * Relic::GetDeltaTime();
+	float speed = 8 * Relic::GetDeltaTime();
 	if (Input::GetKey(GLFW_KEY_PERIOD)) 
 		transform->SetPosition(transform->GetPosition() + cam->GetDirection() * speed);
 	if (Input::GetKey(GLFW_KEY_E)) 

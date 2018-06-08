@@ -7,7 +7,7 @@ class Light
 {
 public:
 ;
-	Light(std::string lightLoc, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec, Shader* shader = NULL);
+	Light(std::string lightLoc, glm::vec3 color, float intensity, Shader* shader = NULL);
 	virtual void Initialise();
 
 	void SetActive(bool active);
@@ -19,9 +19,8 @@ public:
 	const static int MAX_P_LIGHTS = 4;
 protected:
 	std::string lightLocation;
-	glm::vec3 amb;
-	glm::vec3 diff;
-	glm::vec3 spec;
+	float intensity;
+	glm::vec3 color;
 
 	virtual ~Light();
 

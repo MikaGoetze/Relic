@@ -1,0 +1,78 @@
+{
+ "name": "Tree",
+ "_id_": 0,
+ "gos":
+ [
+   {
+    "name": "Player",
+    "behaviours":
+    [
+      {
+       "lpx": 0.0,
+       "lpy": 0.0,
+       "lpz": 0.0,
+       "px": 0.0,
+       "py": 0.0,
+       "pz": 0.0,
+       "lrx": 0.0,
+       "lry": 0.0,
+       "lrz": 0.0,
+       "lrw": 1.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "rw": 1.0,
+       "children":
+       [
+       ],
+       "_type_": "Transform",
+       "_id_": 1,
+      },
+      {
+       "_type_": "Camera",
+       "_id_": 2,
+      },
+      {
+       "_type_": "FPSCamera",
+       "_id_": 3,
+      },
+      {
+       "_type_": "PlayerMove",
+       "_id_": 4,
+      },
+    ],
+   },
+   {
+    "name": "tree",
+    "behaviours":
+    [
+      {
+       "lpx": 0.0,
+       "lpy": 0.0,
+       "lpz": 0.0,
+       "px": 0.0,
+       "py": 0.0,
+       "pz": 0.0,
+       "lrx": 0.0,
+       "lry": 0.0,
+       "lrz": 0.0,
+       "lrw": 1.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "rw": 1.0,
+       "children":
+       [
+       ],
+       "_type_": "Transform",
+       "_id_": 5,
+      },
+      {
+       "model_path": "Models/glock/Glock_17.obj",
+       "_type_": "MeshRenderer",
+       "_id_": 6,
+      },
+    ],
+   },
+ ],
+}

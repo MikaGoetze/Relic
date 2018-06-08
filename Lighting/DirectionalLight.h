@@ -4,7 +4,7 @@
 class DirectionalLight : public Light
 {
 public:
-	DirectionalLight(glm::vec3 dir, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec, Shader* shader);
+	DirectionalLight(glm::vec3 dir, glm::vec3 color, float intensity, Shader* shader);
 	~DirectionalLight();
 	void Initialise() override;
 

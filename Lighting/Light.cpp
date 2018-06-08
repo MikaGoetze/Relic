@@ -1,7 +1,7 @@
 ﻿#include "Light.h"
 #include <iostream>
 
-Light::Light(std::string lightLoc, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec, Shader* shader)
+Light::Light(std::string lightLoc, glm::vec3 color, float intensity, Shader* shader)
 {
 	if (shader != NULL && SHADER == NULL) {
 		SHADER = shader;
@@ -11,9 +11,8 @@ Light::Light(std::string lightLoc, glm::vec3 amb, glm::vec3 diff, glm::vec3 spec
 		SHADER = new Shader("lighting.vert", "lighting.frag");
 	}
 
-	this->amb = amb;
-	this->spec = spec;
-	this->diff = diff;
+	this->color = color;
+	this->intensity = intensity;
 	lightLocation = lightLoc;
 }
 
@@ -23,9 +22,8 @@ Light::~Light()
 
 void Light::Initialise()
 {
-	SHADER->SetVec3(lightLocation + ".ambient", amb);
-	SHADER->SetVec3(lightLocation + ".diffuse", diff);
-	SHADER->SetVec3(lightLocation + ".specular", spec);
+	SHADER->SetVec3(lightLocation + ".color", color);
+	SHADER->SetFloat(lightLocation + ".intensity", intensity);
 }
 
 void Light::SetActive(bool active)
