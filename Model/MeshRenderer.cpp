@@ -28,17 +28,17 @@ void MeshRenderer::Render(Shader* shader)
 
 		tinyobj::material_t mat = model->GetMaterial(i);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, model->GetTexID(0));
-
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, model->GetNormalTexID(0));
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, model->GetRoughnessTexID(0));
-
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, model->GetMetallicTexID(0));
+		glBindTexture(GL_TEXTURE_2D, model->GetTexID(i));
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, model->GetNormalTexID(i));
+
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, model->GetRoughnessTexID(i));
+
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, model->GetMetallicTexID(i));
 
 		//Update our mesh's position based on scene hierarchy.
 		Transform* transform = GetGameObject()->GetComponent<Transform>();
@@ -48,10 +48,10 @@ void MeshRenderer::Render(Shader* shader)
 		mod = glm::toMat4(transform->GetRotation()) * mod;
 
 		shader->SetMat4("model", mod);
-		shader->SetInt("material.albedo", 0);
-		shader->SetInt("material.normal", 1);
-		shader->SetInt("material.roughness", 2);
-		shader->SetInt("material.metallic", 3);
+		shader->SetInt("material.albedo", 3);
+		shader->SetInt("material.normal", 4);
+		shader->SetInt("material.roughness", 5);
+		shader->SetInt("material.metallic", 6);
 		shader->SetFloat("material.shininess", mat.shininess);
 		shader->SetVec3("material.ambient", mat.ambient[0], mat.ambient[1], mat.ambient[2]);
 

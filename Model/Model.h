@@ -48,6 +48,7 @@ private:
 	std::vector<Texture> normalTexs;
 	std::vector<Texture> metallicTexs;
 	std::vector<Texture> roughnessTexs;
+	std::vector<std::string> names;
 
 	void LoadTexture(std::vector<Texture>& tex_vec, int i, std::string filepath, std::string dir);
 

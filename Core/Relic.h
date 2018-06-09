@@ -31,6 +31,8 @@ public:
 
 	static Shader* GetStandardShader();
 
+	static float GetSmoothedFPS();
+
 private:
 	static Relic* instance;
 	Window* Window;
@@ -43,6 +45,10 @@ private:
 	void GameLoop();
 	void Update();
 	void Start();
+
+	static const int NUM_FPS_SAMPLES = 64;
+	float fpsSamples[NUM_FPS_SAMPLES];
+	int currentSample = 0;
 
 	std::vector<RelicBehaviour*> * behaviours;
 };

@@ -96,6 +96,12 @@
     <ClInclude Include="PlayerMove.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Texturing\HDRTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Texturing\RenderUtil.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -169,6 +175,12 @@
     </ClCompile>
     <ClCompile Include="PlayerMove.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texturing\HDRTexture.cpp">
+      <Filter>Header Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Texturing\RenderUtil.cpp">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

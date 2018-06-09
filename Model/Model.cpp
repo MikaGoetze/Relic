@@ -45,6 +45,7 @@ void Model::LoadModel(std::string filepath)
 	normalTexs = std::vector<Texture>(materials.size());
 	metallicTexs = std::vector<Texture>(materials.size());
 	roughnessTexs = std::vector<Texture>(materials.size());
+	names = std::vector < std::string >(materials.size());
 
 	//Lets load the textures in
 	for (int i = 0; i < materials.size(); i++)
@@ -55,6 +56,8 @@ void Model::LoadModel(std::string filepath)
 		LoadTexture(normalTexs, i, mat.normal_texname, mat_directory);
 		LoadTexture(metallicTexs, i, mat.metallic_texname, mat_directory);
 		LoadTexture(roughnessTexs, i, mat.roughness_texname, mat_directory);
+
+		names.at(i) = mat.name;
 	}
 
 	model_loaded = true;
@@ -139,22 +142,22 @@ int Model::GetNumVertices(unsigned int obj_index)
 
 int Model::GetTexID(unsigned obj_index)
 {
-	return albedoTexs.at(obj_index).ID();
+	return albedoTexs.at(shapes.at(obj_index).mesh.material_ids.at(0)).ID();
 }
 
 int Model::GetNormalTexID(unsigned obj_index)
 {
-	return normalTexs.at(obj_index).ID();
+	return normalTexs.at(shapes.at(obj_index).mesh.material_ids.at(0)).ID();
 }
 
 int Model::GetMetallicTexID(unsigned obj_index)
 {
-	return metallicTexs.at(obj_index).ID();
+	return metallicTexs.at(shapes.at(obj_index).mesh.material_ids.at(0)).ID();
 }
 
 int Model::GetRoughnessTexID(unsigned obj_index)
 {
-	return roughnessTexs.at(obj_index).ID();
+	return roughnessTexs.at(shapes.at(obj_index).mesh.material_ids.at(0)).ID();
 }
 
 std::string Model::GetModelPath()

@@ -1,3 +1,5 @@
+
+
 #version 330 core
 
 struct Material {
@@ -5,7 +7,9 @@ struct Material {
 	sampler2D normal;
 	sampler2D metallic;
 	sampler2D roughness;
-	sampler2D ao;
+	samplerCube irradiance_map;
+	samplerCube prefilter_map;
+	sampler2D brdf_lut;
 	float shininess;
 };
 
@@ -49,6 +53,7 @@ uniform SpotLight spotLight;
 uniform Material material;
 uniform vec3 viewPos;
 
+
 in vec2 TexCoords;
 in vec3 FragPos;
 in vec3 Normal;
@@ -78,44 +83,11 @@ vec3 GetTangentsFromNormalMap()
 	return normalize(TBN * tangent_normal);
 }
 
-void main()
-{
-	vec3 norm = GetTangentsFromNormalMap();
-
-	vec3 viewDir = normalize(viewPos - FragPos);
-	
-	//calculate luminosity for this fragment
-	
-	vec3 F0 = vec3(0.04);
-	vec3 albedo = pow(texture(material.albedo, TexCoords).rgb, vec3(2.2));
-	float metallic = texture(material.metallic, TexCoords).r;
-	
-	F0 = mix(F0, albedo, metallic);
-	
-	//Directional Light
-	vec3 luminosity = CalcDirLight(sun, norm, viewDir, F0);
-	
-	//Point Lights
-	for(int i = 0; i < num_p_lights; i++)
-	{
-		luminosity += CalcPointLight(pointLights[i], norm, FragPos, viewDir, F0);
-	}
-	
-	//SpotLight
-
-	luminosity += CalcSpotLight(spotLight, norm, FragPos, viewDir, F0);
-
-	vec3 color = vec3(0.03) * albedo + luminosity;
-	color = color/(color + vec3(1));
-	color = pow(color, vec3(1/2.2));
-	
-	FragColor = vec4(color, 1);
-}
 
 //PBR Calculation functions
-vec3 FresnelShlick(vec3 H, vec3 V, vec3 F0)
+vec3 FresnelShlick(vec3 H, vec3 V, vec3 F0, float roughness)
 {
-	return F0 + (1 - F0) * pow(1 - max(dot(H, V), 0), 5);
+	return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(1 - max(dot(H, V), 0), 5);
 }
 
 float TrowbridgeReitzGGX(vec3 N, vec3 H, float roughness)
@@ -126,8 +98,7 @@ float TrowbridgeReitzGGX(vec3 N, vec3 H, float roughness)
 float GSchlickGGX(vec3 N, vec3 V, float roughness)
 {
 	float N_dot_V = max(dot(N, V), 0);
-	float r = (roughness + 1);
-	float k = (r * r) / 8;
+	float k = pow(roughness + 1, 2) / 8;
 	
 	return N_dot_V / (N_dot_V * (1 - k) + k);
 }
@@ -154,15 +125,66 @@ vec3 CalcBRDF(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 lightColor, vec3 F0
 	
 	float NDF = TrowbridgeReitzGGX(normal, H, roughness);
 	float G = GSmith(normal, viewDir, lightDir, roughness);
-	vec3 F = FresnelShlick(H, viewDir, F0);
+	vec3 F = FresnelShlick(H, viewDir, F0, roughness);
 	
 	vec3 spec = (NDF * G * F) / max(4 * max(dot(normal, viewDir), 0) * max(dot(normal, lightDir), 0), 0.001);
 	
 	vec3 kS = F;
-	vec3 kD = (vec3(1) - kS) * (1 - texture(material.metallic, TexCoords).r);
+	vec3 kD = (vec3(1) - kS) * (1 - roughness);
 	
 	return (kD * texture(material.albedo, TexCoords).xyz / M_PI + spec) * radiance * max(dot(normal, lightDir), 0);
 }
+
+void main()
+{
+	vec3 albedo = pow(texture(material.albedo, TexCoords).rgb, vec3(2.2));
+	float metallic = texture(material.metallic, TexCoords).r;
+	float roughness = texture(material.roughness, TexCoords).r;
+	
+	vec3 normal = GetTangentsFromNormalMap();
+	vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 reflection = reflect(-viewDir, normal);
+	
+	vec3 F0 = vec3(0.04);
+	F0 = mix(F0, albedo, metallic);
+	
+	//Directional Light
+	vec3 luminosity = CalcDirLight(sun, normal, viewDir, F0);
+	
+	//Point Lights
+	for(int i = 0; i < num_p_lights; i++)
+	{
+		luminosity += CalcPointLight(pointLights[i], normal, FragPos, viewDir, F0);
+	}
+	
+	//SpotLight
+
+	luminosity += CalcSpotLight(spotLight, normal, FragPos, viewDir, F0);
+
+	//Final IBL calculations
+	vec3 F = FresnelShlick(normal, viewDir, F0, roughness);
+	
+	vec3 kS = F;
+	vec3 kD = vec3(1.0) - kS;
+	kD *= 1.0 - metallic;
+	
+	vec3 irradiance = texture(material.irradiance_map, normal).rgb;
+	vec3 diffuse = irradiance * albedo;
+	
+	const float MAX_LOD_LEVEL = 4.0;
+	vec3 prefiltered_color = textureLod(material.prefilter_map, reflection, roughness * MAX_LOD_LEVEL).rgb;
+	vec2 brdf = texture(material.brdf_lut, vec2(max(dot(normal, viewDir), 0), roughness)).rg;
+	vec3 specular = prefiltered_color * (F * brdf.x + brdf.y);
+	
+	vec3 ambient = (kD * diffuse + specular);
+	
+	vec3 color = ambient + luminosity;
+	
+	color = color / (color + vec3(1));
+	color = pow(color, vec3(1/2.2));
+	FragColor = vec4(color, 1);
+}
+
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 F0)
 {

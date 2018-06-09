@@ -1,3 +1,7 @@
 [Relic][Core] Initialised Engine. Starting game loop...
-[Relic][Serializer] Error : Class 'Test' has not been registered and will not be loaded.
-[Relic][Serializer] Error : Class 'Test' has not been registered and will not be loaded.
+[Relic][Core] Serializing class Transform
+[Relic][Core] Serializing class Camera
+[Relic][Core] Serializing class FPSCamera
+[Relic][Core] Serializing class PlayerMove
+[Relic][Core] Serializing class Transform
+[Relic][Core] Serializing class MeshRenderer

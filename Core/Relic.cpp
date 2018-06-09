@@ -92,7 +92,7 @@ void Relic::Update()
 	glCullFace(GL_BACK);
 
 	if(currentScene != NULL)
-		currentScene->Render(standard_shader);
+		currentScene->Render(standard_shader, projection, view);
 
 	//We're done rendering, lets swap the buffers
 	glfwSwapBuffers(Window->InternalWindow());
@@ -157,4 +157,17 @@ float Relic::GetDeltaTime()
 Shader* Relic::GetStandardShader()
 {
 	return instance->standard_shader;
+}
+
+float Relic::GetSmoothedFPS()
+{
+	instance->fpsSamples[instance->currentSample % NUM_FPS_SAMPLES] = 1.0f / instance->deltaTime;
+	instance->currentSample++;
+	float fps = 0;
+	for (int i = 0; i < NUM_FPS_SAMPLES; i++)
+	{
+		fps += instance->fpsSamples[i];
+	}
+	fps /= NUM_FPS_SAMPLES;
+	return fps;
 }

@@ -68,7 +68,7 @@
        "_id_": 5,
       },
       {
-       "model_path": "Models/glock/Glock_17.obj",
+       "model_path": "Models/gun2/gun.obj",
        "_type_": "MeshRenderer",
        "_id_": 6,
       },
