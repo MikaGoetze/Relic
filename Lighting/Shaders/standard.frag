@@ -1,5 +1,3 @@
-
-
 #version 330 core
 
 struct Material {
@@ -14,34 +12,32 @@ struct Material {
 };
 
 struct DirLight {
+	sampler2D depth_map;
 	vec3 direction;
 	vec3 color;
 	float intensity;
+	mat4 light_space;
 };
 
 struct PointLight {
+	sampler2D depth_map;
 	vec3 position;
-
-	float constant;
-	float linear;
-	float quadratic;
 
 	vec3 color;
 	float intensity;
+	mat4 light_space;
 };
 
 struct SpotLight {
+	sampler2D depth_map;
 	vec3 position;
 	vec3 direction;
 	float cutOff;
 	float outerCutOff;
 
-	float constant;
-	float linear;
-	float quadratic;
-
 	vec3 color;
 	float intensity;
+	mat4 light_space;
 };
 
 #define M_PI 3.1415926535897932384626433832795
@@ -52,7 +48,6 @@ uniform PointLight pointLights[4];
 uniform SpotLight spotLight;
 uniform Material material;
 uniform vec3 viewPos;
-
 
 in vec2 TexCoords;
 in vec3 FragPos;
@@ -81,6 +76,38 @@ vec3 GetTangentsFromNormalMap()
 	mat3 TBN = mat3(T, B, N);
 	
 	return normalize(TBN * tangent_normal);
+}
+
+float Shadow(sampler2D map, mat4 light_space, vec3 normal, vec3 lightDir)
+{
+	vec4 fp = light_space * vec4(FragPos, 1);
+	//transform coords into 0,1
+	vec3 proj_coords = fp.xyz / fp.w;
+	proj_coords = proj_coords * 0.5 + 0.5;
+	
+	float closest_depth = texture(map, proj_coords.xy).r;
+	float our_depth = proj_coords.z;
+	
+	float shadow_bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+	
+	float shad = 0.0;
+	vec2 texel_size = 1.0 / textureSize(map, 0);
+	float num_samples = 0;
+	for(int x = -1; x <= 1; x++)
+	{
+		for(int y = -1; y <= 1; y++)
+		{
+			num_samples += 1;
+			float pcf_depth = texture(map, proj_coords.xy + vec2(x,y) * texel_size).r;
+			shad += (our_depth - shadow_bias) > pcf_depth ? 0 : 1;
+		}
+	}
+	
+	shad = float(shad) / float(num_samples);
+	
+	if(proj_coords.z > 1)
+		shad = 0;
+	return shad;
 }
 
 
@@ -178,7 +205,7 @@ void main()
 	
 	vec3 ambient = (kD * diffuse + specular);
 	
-	vec3 color = ambient + luminosity;
+	vec3 color = luminosity + ambient;
 	
 	color = color / (color + vec3(1));
 	color = pow(color, vec3(1/2.2));
@@ -190,7 +217,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 F0)
 {
 	vec3 lightDir = normalize(-light.direction);
 
-	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, 0, light.intensity, false);
+	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, 0, light.intensity, false) * Shadow(light.depth_map, light.light_space, normal, lightDir);
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 F0)
@@ -198,7 +225,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 	vec3 lightDir = normalize(light.position - fragPos);
 	float distance = length(light.position - fragPos);
 	
-	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true);
+	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true) * Shadow(light.depth_map, light.light_space, normal, lightDir);
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 F0)
@@ -212,7 +239,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec
 
 	float distance = length(light.position - fragPos);
 	
-	vec3 brdf = CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true);
+	vec3 brdf = CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true) * Shadow(light.depth_map, light.light_space, normal, lightDir);
 
 	return brdf * intensity;
 }

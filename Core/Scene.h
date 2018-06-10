@@ -17,7 +17,7 @@ public:
 
 	void AddGameObject(GameObject* go);
 	void SetName(std::string name);
-	void Render(Shader* shader, glm::mat4 proj, glm::mat4 view);
+	void Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_lighting_pass = false);
 	void Update();
 	void Start();
 

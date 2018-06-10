@@ -3,7 +3,7 @@
 #include <Core/RelicBehaviour.h>
 #include <Core/Input.h>
 #include "Util.h"
-#include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/matrix_transform.hpp>
 
 Relic * Relic::instance;
 
@@ -92,13 +92,27 @@ void Relic::Update()
 	glCullFace(GL_BACK);
 
 	if(currentScene != NULL)
-		currentScene->Render(standard_shader, projection, view);
+		currentScene->Render(standard_shader, projection, view, false);
 
 	//We're done rendering, lets swap the buffers
 	glfwSwapBuffers(Window->InternalWindow());
 	//Poll events
 	glfwPollEvents();
 
+}
+
+//Credit to khronos for this function
+void GLAPIENTRY MessageCallback(GLenum source,
+	GLenum type,
+	GLuint id,
+	GLenum severity,
+	GLsizei length,
+	const GLchar* message,
+	const void* userParam)
+{
+	fprintf(stdout, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+		type, severity, message);
 }
 
 void Relic::Start()
@@ -114,6 +128,10 @@ void Relic::Start()
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
+
+	glEnable(GL_DEBUG_OUTPUT);
+	glDebugMessageCallback(MessageCallback, 0);
+
 	if(err != GLEW_OK)
 	{
 		Util::Log("[Relic][Core] Error : Glew init failed. Extiting...");
@@ -170,4 +188,9 @@ float Relic::GetSmoothedFPS()
 	}
 	fps /= NUM_FPS_SAMPLES;
 	return fps;
+}
+
+Scene* Relic::GetCurrentScene()
+{
+	return instance->currentScene;
 }

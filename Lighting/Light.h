@@ -2,12 +2,17 @@
 #define LIGHT_H
 #include <glm/gtc/type_ptr.hpp>
 #include "Shader.h"
+#include "Core/RelicBehaviour.h"
 
-class Light
+class Light : public RelicBehaviour
 {
 public:
-;
+	void Serialize() override;
+	void Deserialize() override;
+
 	Light(std::string lightLoc, glm::vec3 color, float intensity, Shader* shader = NULL);
+	void SetDepthMap(unsigned int map);
+	void SetLightSpace(glm::mat4 space);
 	virtual void Initialise();
 
 	void SetActive(bool active);
@@ -21,6 +26,8 @@ protected:
 	std::string lightLocation;
 	float intensity;
 	glm::vec3 color;
+	unsigned int depth_map;
+	glm::mat4 light_space;
 
 	virtual ~Light();
 

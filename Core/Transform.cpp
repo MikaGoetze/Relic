@@ -129,9 +129,16 @@ glm::quat Transform::GetRotation()
 void Transform::SetLocalRotation(glm::quat lq)
 {
 	localRotation = lq;
+	//soeu
+}
+
+void Transform::SetParent(Transform* parent)
+{
+	this->parent = parent;
 }
 
 glm::quat Transform::GetLocalRotation()
 {
+	//Return local rot
 	return localRotation;
 }

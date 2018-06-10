@@ -1,4 +1,4 @@
-﻿#include "Shader.h"
+﻿#include <Lighting/Shader.h>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -7,38 +7,52 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Core/Util.h"
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath)
+Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath)
 {
 	v_path = vertexPath;
 	f_path = fragmentPath;
 
 	std::string vertex_code;
 	std::string fragment_code;
+	std::string geometry_code;
 	std::ifstream vertex_shader_file;
 	std::ifstream fragment_shader_file;
+	std::ifstream geometry_shader_file;
 
 	//Lets load in the files
 	vertex_shader_file.open(vertexPath);
 	fragment_shader_file.open(fragmentPath);
-	std::stringstream vertex_stream, fShaderStream;
+	if(geometryPath != NULL)
+		geometry_shader_file.open(geometryPath);
+	std::stringstream vertex_stream, fShaderStream, geometry_stream;
 
 	//lets read them
 	vertex_stream << vertex_shader_file.rdbuf();
 	fShaderStream << fragment_shader_file.rdbuf();
+	if(geometryPath != NULL)
+		geometry_stream << geometry_shader_file.rdbuf();
 
 	//close them once were done with them
 	vertex_shader_file.close();
 	fragment_shader_file.close();
+	if(geometryPath != NULL)
+		geometry_shader_file.close();
 	
 	//convert them to strings
 	vertex_code = vertex_stream.str();
 	fragment_code = fShaderStream.str();
+	if(geometryPath != NULL)
+		geometry_code = geometry_stream.str();
+
 	//convert them to c_strings
 	const char* vertex_shader_character_array = vertex_code.c_str();
 	const char* fragment_shader_character_array = fragment_code.c_str();
+	const char* geometry_shader_character_array = geometry_code.c_str();
+	if(geometryPath != NULL)
+		geometry_shader_character_array = geometry_code.c_str();
 
 	//compile the shader
-	unsigned int vertex, fragment;
+	unsigned int vertex, fragment, geometry;
 	int success;
 	char info_log[512];
 
@@ -65,6 +79,20 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 	{
 		glGetShaderInfoLog(fragment, 512, NULL, info_log);
 		Util::Log("[Relic][Shader] Error : " + std::string(fragmentPath) + " compilation failed\n" + std::string(info_log));
+	}
+
+	//Finally for the geometry shader
+	if(geometryPath != NULL)
+	{
+		geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		glShaderSource(geometry, 1, &geometry_shader_character_array, NULL);
+		glCompileShader(geometry);
+		glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+		if (!success)
+		{
+			glGetShaderInfoLog(geometry, 512, NULL, info_log);
+			Util::Log("[Relic][Shader] Error : " + std::string(geometryPath) + " compilation failed\n" + std::string(info_log));
+		}
 	}
 
 	//lets rememeber the id, and create the shader program

@@ -1,7 +1,6 @@
 ﻿#include "HDRTexture.h"
 #include <Texturing/stb_image.h>
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
 #include <GL/gl.h>
 #include "Core/Util.h"
 

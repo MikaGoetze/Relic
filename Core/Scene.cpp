@@ -36,8 +36,59 @@ void Scene::SetName(std::string name)
 	this->name = name;
 }
 
-void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view)
+void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_lighting_pass)
 {
+	shader->SetActive();
+	if(is_lighting_pass)
+	{
+		for(GameObject* go : gameObjects)
+		{
+			MeshRenderer* renderer = go->GetComponent<MeshRenderer>();
+			if (renderer == NULL) continue;
+
+			//Lets render it
+			renderer->Render(shader);
+		}
+		return;
+	}
+
+	RenderUtil::InitLightDepthMaps(shader);
+	//Lets update our depth maps first
+	for(GameObject *go : gameObjects)
+	{
+		DirectionalLight* dlight = go->GetComponent<DirectionalLight>();
+		PointLight* plight = go->GetComponent<PointLight>();
+		SpotLight* slight = go->GetComponent<SpotLight>();
+		
+		if(plight != NULL)
+		{
+			RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(plight);
+			plight->SetLightSpace(ret.light_space);
+			int index = plight->GetIndex();
+			switch (index)
+			{
+			case 0:
+				plight->SetDepthMap(8);
+			case 1:
+				plight->SetDepthMap(9);
+			case 2:
+				plight->SetDepthMap(10);
+			}
+		}
+		if(slight != NULL)
+		{
+			RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(slight);
+			slight->SetLightSpace(ret.light_space);
+			slight->SetDepthMap(11);
+		}
+		if(dlight != NULL)
+		{
+			RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(dlight);
+			dlight->SetLightSpace(ret.light_space);	
+			dlight->SetDepthMap(7);
+		}
+	}
+
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, irradiance_cubemap);
 
@@ -46,6 +97,9 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view)
 
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, brdf_lut);
+
+	RenderUtil::SetDirLightDM();
+	RenderUtil::SetSpotLightDM();
 
 	shader->SetInt("material.irradiance_map", 0);
 	shader->SetInt("material.prefilter_map", 1);
@@ -72,6 +126,11 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view)
 	skybox_shader->SetMat4("projection", proj);
 	skybox_shader->SetMat4("view", view);
 	skybox_shader->SetInt("environment_map", 0);
+
+	//Shader simple = Shader("Lighting/Shaders/simple_tex.vert", "Lighting/Shaders/simple_tex.frag");
+	//simple.SetActive();
+	//simple.SetInt("depth_map", 7);
+	//RenderUtil::RenderQuad();
 
 	RenderUtil::RenderCube();
 

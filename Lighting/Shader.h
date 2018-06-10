@@ -12,7 +12,7 @@ private:
 	std::string v_path, f_path;
 public:
 	unsigned int shader_id;
-	Shader(const GLchar* vertexPath, const GLchar* fragmentPath);
+	Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = NULL);
 	void SetActive();
 	void SetBool(const std::string &name, bool value) const;
 	void SetInt(const std::string &name, int value) const;

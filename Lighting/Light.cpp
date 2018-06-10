@@ -1,19 +1,36 @@
 ﻿#include "Light.h"
 #include <iostream>
 
+void Light::Serialize()
+{
+}
+
+void Light::Deserialize()
+{
+}
+
 Light::Light(std::string lightLoc, glm::vec3 color, float intensity, Shader* shader)
 {
 	if (shader != NULL && SHADER == NULL) {
 		SHADER = shader;
 	}
-	if (SHADER == NULL)
-	{
-		SHADER = new Shader("lighting.vert", "lighting.frag");
-	}
 
 	this->color = color;
 	this->intensity = intensity;
+	this->depth_map = 0;
+	this->light_space = glm::mat4();
 	lightLocation = lightLoc;
+}
+
+void Light::SetDepthMap(unsigned map)
+{
+	depth_map = map;
+	SHADER->SetInt(lightLocation + ".depth_map", depth_map);
+}
+
+void Light::SetLightSpace(glm::mat4 space)
+{
+	light_space = space;
 }
 
 Light::~Light()
@@ -23,6 +40,8 @@ Light::~Light()
 void Light::Initialise()
 {
 	SHADER->SetVec3(lightLocation + ".color", color);
+	SHADER->SetInt(lightLocation + ".depth_map", depth_map);
+	SHADER->SetMat4(lightLocation + ".light_space", light_space);
 	SHADER->SetFloat(lightLocation + ".intensity", intensity);
 }
 

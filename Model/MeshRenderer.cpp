@@ -46,6 +46,7 @@ void MeshRenderer::Render(Shader* shader)
 		glm::mat4 mod = glm::mat4();
 		mod = glm::translate(mod, transform->GetPosition());
 		mod = glm::toMat4(transform->GetRotation()) * mod;
+		mod = glm::scale(mod, glm::vec3(scale));
 
 		shader->SetMat4("model", mod);
 		shader->SetInt("material.albedo", 3);

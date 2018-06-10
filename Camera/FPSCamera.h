@@ -1,6 +1,7 @@
 ﻿#ifndef FPS_CAM_H
 #define FPS_CAM_H
 #include "Camera.h"
+#include <GL/glew.h>
 #include <GLFW/glfw3.h> 
 #include <glm/gtc/type_ptr.hpp>
 #include <Core/RelicBehaviour.h>

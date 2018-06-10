@@ -3,7 +3,6 @@
 #include <Core/RelicBehaviour.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
 
 class Transform : public RelicBehaviour
 {
@@ -34,6 +33,8 @@ public:
 
 	void SetLocalRotation(glm::quat lq);
 	glm::quat GetLocalRotation();
+
+	void SetParent(Transform* parent);
 
 };
 

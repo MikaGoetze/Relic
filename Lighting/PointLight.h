@@ -5,14 +5,18 @@
 class PointLight : public Light
 {
 public:
-	PointLight(glm::vec3 pos, glm::vec3 color, float intensity, Shader* shader);
+	void Update() override;
+	void Serialize() override;
+	void Deserialize() override;
+	PointLight(glm::vec3 color, float intensity, Shader* shader);
+	unsigned int GetIndex()
+	{
+		return index;
+	}
 	~PointLight();
 	void Initialise();
-	void SetPosition(glm::vec3 pos);
-	glm::vec3 GetPosition();
 private:
 	unsigned int index;
-	glm::vec3 position;
 };
 
 #endif

@@ -14,6 +14,7 @@ private:
 	Model * model = NULL;
 public:
 	void Render(Shader* shader);
+	float scale;
 
 	Model* SetModel(Model* model);
 	Model* GetModel();

@@ -40,6 +40,42 @@
        "_type_": "PlayerMove",
        "_id_": 4,
       },
+      {
+       "_type_": "DirectionalLight",
+       "_id_": 5,
+      },
+    ],
+   },
+   {
+    "name": "go2",
+    "behaviours":
+    [
+      {
+       "lpx": -2.0,
+       "lpy": -2.0,
+       "lpz": -2.0,
+       "px": -2.0,
+       "py": -2.0,
+       "pz": -2.0,
+       "lrx": 0.0,
+       "lry": 0.0,
+       "lrz": 0.0,
+       "lrw": 1.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "rw": 1.0,
+       "children":
+       [
+       ],
+       "_type_": "Transform",
+       "_id_": 6,
+      },
+      {
+       "model_path": "Models/gun2/gun.obj",
+       "_type_": "MeshRenderer",
+       "_id_": 7,
+      },
     ],
    },
    {
@@ -65,12 +101,44 @@
        [
        ],
        "_type_": "Transform",
-       "_id_": 5,
+       "_id_": 8,
       },
       {
        "model_path": "Models/gun2/gun.obj",
        "_type_": "MeshRenderer",
-       "_id_": 6,
+       "_id_": 9,
+      },
+    ],
+   },
+   {
+    "name": "child",
+    "behaviours":
+    [
+      {
+       "lpx": 0.0,
+       "lpy": 0.0,
+       "lpz": 0.0,
+       "px": 0.0,
+       "py": 0.0,
+       "pz": 0.0,
+       "lrx": 0.0,
+       "lry": 0.0,
+       "lrz": 0.0,
+       "lrw": 1.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "rw": 1.0,
+       "parent": #1,
+       "children":
+       [
+       ],
+       "_type_": "Transform",
+       "_id_": 10,
+      },
+      {
+       "_type_": "SpotLight",
+       "_id_": 11,
       },
     ],
    },

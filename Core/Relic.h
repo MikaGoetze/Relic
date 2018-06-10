@@ -2,9 +2,7 @@
 #define RELIC_H
 
 #define GLEW_STATIC
-#include <gl/glew.h>
-#include <string>
-#include <GLFW/glfw3.h>
+#include <GL/glew.h>
 #include <Core/Window.h>
 #include <vector>
 #include <Camera/FPSCamera.h>
@@ -32,6 +30,8 @@ public:
 	static Shader* GetStandardShader();
 
 	static float GetSmoothedFPS();
+
+	static Scene* GetCurrentScene();
 
 private:
 	static Relic* instance;

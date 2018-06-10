@@ -1,10 +1,12 @@
-﻿#include "RenderUtil.h"
+#include "RenderUtil.h"
 #include <GL/glew.h>
-#include <GL/GL.h>
 #include <GLFW/glfw3.h>
 #include "Lighting/Shader.h"
-#include <glm/gtc/matrix_transform.hpp>
 #include "Core/Relic.h"
+#include <Lighting/DirectionalLight.h>
+#include <Lighting/SpotLight.h>
+#include <Lighting/PointLight.h>
+#include <glm/gtc/matrix_transform.inl>
 
 unsigned int RenderUtil::RenderEquirectangularEnvironmentToCubemap(unsigned int id)
 {
@@ -35,7 +37,11 @@ unsigned RenderUtil::CalculateBRDF_LUT()
 	Shader* shader = new Shader("Lighting/Shaders/brdf_lut.vert", "Lighting/Shaders/brdf_lut.frag");
 	unsigned int lut;
 	glGenTextures(1, &lut);
-
+	if(FBO == 0 || RBO == 0)
+	{
+		glGenFramebuffers(1, &FBO);
+		glGenRenderbuffers(1, &RBO);
+	}
 	glBindTexture(GL_TEXTURE_2D, lut);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RG16F, 512, 512, 0, GL_RG, GL_FLOAT, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -62,6 +68,177 @@ unsigned RenderUtil::CalculateBRDF_LUT()
 	Relic::GetStandardShader()->SetActive();
 
 	return lut;
+}
+
+RenderUtil::DepthRet RenderUtil::GetLightDepthMap(DirectionalLight* light)
+{
+	glCullFace(GL_FRONT);
+	if(DFBO == 0)
+	{
+		glGenFramebuffers(1, &DFBO);
+	}
+
+	unsigned int shadow_size = 4096;
+
+	if(d_depthMap == 0)
+		glGenTextures(1, &d_depthMap);
+	glBindTexture(GL_TEXTURE_2D, d_depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadow_size, shadow_size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float border_color[] = { 1,1,1,1 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, DFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, d_depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	
+	glViewport(0, 0, shadow_size, shadow_size);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	glm::mat4 dir_light_proj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, 1.0f, 40.0f);
+	glm::vec3 pos = -10.0f * light->GetDirection();
+	glm::mat4 light_view = glm::lookAt(pos, pos + light->GetDirection(), glm::vec3(0, 1, 0));
+	glm::mat4 light_space = dir_light_proj * light_view;
+
+	Shader shadows = Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
+	shadows.SetActive();
+	shadows.SetMat4("light_space", light_space);
+
+	//Lets render the scene 
+	Relic::GetCurrentScene()->Render(&shadows, dir_light_proj, light_view, true);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	Relic::GetStandardShader()->SetActive();
+	glViewport(0, 0, Relic::GetWindow()->WindowWidth(), Relic::GetWindow()->WindowHeight());
+	glCullFace(GL_BACK);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	DepthRet ret;
+	ret.depth_map = d_depthMap;
+	ret.light_space = light_space;
+	return ret;
+}
+
+RenderUtil::DepthRet RenderUtil::GetLightDepthMap(SpotLight* light)
+{
+	glCullFace(GL_FRONT);
+	if(DFBO == 0)
+	{
+		glGenFramebuffers(1, &DFBO);
+	}
+
+	unsigned int shadow_size = 4096;
+
+	if(s_depthMap == 0)
+		glGenTextures(1, &s_depthMap);
+
+	glBindTexture(GL_TEXTURE_2D, s_depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, shadow_size, shadow_size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float border_color[] = { 1,1,1,1 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, border_color);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, DFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, s_depthMap, 0);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	
+	glViewport(0, 0, shadow_size, shadow_size);
+	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	glm::mat4 dir_light_proj = glm::perspective(45.0f, 1.0f, 0.1f, 40.0f);
+	glm::vec3 pos = light->GetGameObject()->GetComponent<Transform>()->GetPosition();
+	glm::mat4 light_view = glm::lookAt(pos, pos + light->GetDirection(), glm::vec3(0, 1, 0));
+	glm::mat4 light_space = dir_light_proj * light_view;
+
+	Shader shadows = Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
+	shadows.SetActive();
+	shadows.SetMat4("light_space", light_space);
+
+	//Lets render the scene 
+	Relic::GetCurrentScene()->Render(&shadows, dir_light_proj, light_view, true);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	Relic::GetStandardShader()->SetActive();
+	glViewport(0, 0, Relic::GetWindow()->WindowWidth(), Relic::GetWindow()->WindowHeight());
+	glCullFace(GL_BACK);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	DepthRet ret;
+	ret.depth_map = s_depthMap;
+	ret.light_space = light_space;
+	return ret;
+}
+
+RenderUtil::DepthRet RenderUtil::GetLightDepthMap(PointLight* light)
+{
+	int index = light->GetIndex();
+	if(p_lights[index] == 0)
+	{
+		glGenTextures(1, &p_lights[index]);
+	}
+
+	const unsigned int shadow_size = 4096;
+	glBindTexture(GL_TEXTURE_CUBE_MAP, p_lights[index]);
+	for(int i = 0; i < 6; i ++)
+	{
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_DEPTH_COMPONENT, shadow_size, shadow_size, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, p_lights[index], 0); 
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+
+	glViewport(0, 0, shadow_size, shadow_size);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	glm::mat4 render_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 40.0f);
+	glm::mat4 render_view_mats[] =
+	{
+		glm::lookAt(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+		glm::lookAt(glm::vec3(0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+		glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+		glm::lookAt(glm::vec3(0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+		glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+		glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))
+	};
+
+	
+
+	for (unsigned int i = 0; i < 6; i++) {
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, p_lights[index], 0);
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	return {};
+}
+
+void RenderUtil::SetDirLightDM()
+{
+	glActiveTexture(GL_TEXTURE7);
+	glBindTexture(GL_TEXTURE_2D, d_depthMap);
+}
+
+void RenderUtil::SetSpotLightDM()
+{
+	glActiveTexture(GL_TEXTURE11);
+	glBindTexture(GL_TEXTURE_2D, s_depthMap);
 }
 
 int RenderUtil::RenderTextureFromCube(Shader* render_shader, unsigned id, int size, bool cubemap_input, bool mipmaps)
@@ -286,10 +463,25 @@ void RenderUtil::RenderQuad()
 	glBindVertexArray(0);
 }
 
+void RenderUtil::InitLightDepthMaps(Shader* shader)
+{
+	shader->SetInt("sun.depth_map", 3);
+	shader->SetInt("pointLights[0].depth_map", 3);
+	shader->SetInt("pointLights[1].depth_map", 3);
+	shader->SetInt("pointLights[2].depth_map", 3);
+	shader->SetInt("pointLights[3].depth_map", 3);
+	shader->SetInt("spotLight.depth_map", 3);
+
+}
+
 unsigned int RenderUtil::CubeVBO;
 unsigned int RenderUtil::CubeVAO;
 unsigned int RenderUtil::QuadVAO;
 unsigned int RenderUtil::QuadVBO;
 unsigned int RenderUtil::RBO; 
+unsigned int RenderUtil::d_depthMap;
+unsigned int RenderUtil::s_depthMap;
 unsigned int RenderUtil::FBO;
+unsigned int RenderUtil::DFBO;
+unsigned int RenderUtil::p_lights[Light::MAX_P_LIGHTS];
 bool RenderUtil::has_buffered_cube;
