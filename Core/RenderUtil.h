@@ -23,6 +23,7 @@ public:
 	static DepthRet GetLightDepthMap(PointLight* light);
 	static void SetDirLightDM();
 	static void SetSpotLightDM();
+	static void SetPointLightDMs();
 	static void RenderCube();
 	static void RenderQuad();
 	static void InitLightDepthMaps(Shader* shader);
@@ -41,6 +42,9 @@ private:
 	static unsigned int d_depthMap;
 	static unsigned int s_depthMap;
 	static unsigned int p_lights[Light::MAX_P_LIGHTS];
+
+	static Shader* s_light_shader;
+	static Shader* d_light_shader;
 };
 
 #endif

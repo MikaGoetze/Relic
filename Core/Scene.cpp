@@ -1,6 +1,6 @@
 ﻿#include "Scene.h"
 #include "Model/MeshRenderer.h"
-#include "Texturing/RenderUtil.h"
+#include <Core/RenderUtil.h>
 #include "Relic.h"
 
 Scene::Scene()
@@ -62,24 +62,30 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_light
 		
 		if(plight != NULL)
 		{
-			RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(plight);
-			plight->SetLightSpace(ret.light_space);
+			//Lets update the depth maps for our point lights
+			//RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(plight);
 			int index = plight->GetIndex();
 			switch (index)
 			{
 			case 0:
 				plight->SetDepthMap(8);
+				break;
 			case 1:
 				plight->SetDepthMap(9);
+				break;
 			case 2:
 				plight->SetDepthMap(10);
+				break;
+			case 3:
+				plight->SetDepthMap(11);
+				break;
 			}
 		}
 		if(slight != NULL)
 		{
 			RenderUtil::DepthRet ret = RenderUtil::GetLightDepthMap(slight);
 			slight->SetLightSpace(ret.light_space);
-			slight->SetDepthMap(11);
+			slight->SetDepthMap(12);
 		}
 		if(dlight != NULL)
 		{
@@ -98,7 +104,9 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_light
 	glActiveTexture(GL_TEXTURE2);
 	glBindTexture(GL_TEXTURE_2D, brdf_lut);
 
+
 	RenderUtil::SetDirLightDM();
+	//RenderUtil::SetPointLightDMs();
 	RenderUtil::SetSpotLightDM();
 
 	shader->SetInt("material.irradiance_map", 0);
@@ -129,7 +137,7 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_light
 
 	//Shader simple = Shader("Lighting/Shaders/simple_tex.vert", "Lighting/Shaders/simple_tex.frag");
 	//simple.SetActive();
-	//simple.SetInt("depth_map", 7);
+	//simple.SetInt("depth_map", 16);
 	//RenderUtil::RenderQuad();
 
 	RenderUtil::RenderCube();

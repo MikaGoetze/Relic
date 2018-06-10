@@ -5,10 +5,13 @@
 class PointLight : public Light
 {
 public:
+	void Start() override;
 	void Update() override;
 	void Serialize() override;
 	void Deserialize() override;
 	PointLight(glm::vec3 color, float intensity, Shader* shader);
+	void SetFar(float far);
+	float GetFar();
 	unsigned int GetIndex()
 	{
 		return index;
@@ -17,6 +20,7 @@ public:
 	void Initialise();
 private:
 	unsigned int index;
+	float far;
 };
 
 #endif

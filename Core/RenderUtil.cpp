@@ -105,12 +105,12 @@ RenderUtil::DepthRet RenderUtil::GetLightDepthMap(DirectionalLight* light)
 	glm::mat4 light_view = glm::lookAt(pos, pos + light->GetDirection(), glm::vec3(0, 1, 0));
 	glm::mat4 light_space = dir_light_proj * light_view;
 
-	Shader shadows = Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
-	shadows.SetActive();
-	shadows.SetMat4("light_space", light_space);
+	if(d_light_shader == NULL) d_light_shader = new Shader("Lighting/Shaders/d_light_shader.vert", "Lighting/Shaders/d_light_shader.frag");
+	d_light_shader->SetActive();
+	d_light_shader->SetMat4("light_space", light_space);
 
 	//Lets render the scene 
-	Relic::GetCurrentScene()->Render(&shadows, dir_light_proj, light_view, true);
+	Relic::GetCurrentScene()->Render(d_light_shader, dir_light_proj, light_view, true);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	Relic::GetStandardShader()->SetActive();
@@ -160,12 +160,12 @@ RenderUtil::DepthRet RenderUtil::GetLightDepthMap(SpotLight* light)
 	glm::mat4 light_view = glm::lookAt(pos, pos + light->GetDirection(), glm::vec3(0, 1, 0));
 	glm::mat4 light_space = dir_light_proj * light_view;
 
-	Shader shadows = Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
-	shadows.SetActive();
-	shadows.SetMat4("light_space", light_space);
+	if (s_light_shader == NULL) s_light_shader = new Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
+	s_light_shader->SetActive();
+	s_light_shader->SetMat4("light_space", light_space);
 
 	//Lets render the scene 
-	Relic::GetCurrentScene()->Render(&shadows, dir_light_proj, light_view, true);
+	Relic::GetCurrentScene()->Render(s_light_shader, dir_light_proj, light_view, true);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	Relic::GetStandardShader()->SetActive();
@@ -200,7 +200,11 @@ RenderUtil::DepthRet RenderUtil::GetLightDepthMap(PointLight* light)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	if(DFBO == 0)
+	{
+		glGenFramebuffers(1, &DFBO);
+	}
+	glBindFramebuffer(GL_FRAMEBUFFER, DFBO);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, p_lights[index], 0); 
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
@@ -208,25 +212,47 @@ RenderUtil::DepthRet RenderUtil::GetLightDepthMap(PointLight* light)
 	glViewport(0, 0, shadow_size, shadow_size);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	glm::mat4 render_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 40.0f);
-	glm::mat4 render_view_mats[] =
-	{
-		glm::lookAt(glm::vec3(0), glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
-		glm::lookAt(glm::vec3(0), glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
-		glm::lookAt(glm::vec3(0), glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
-		glm::lookAt(glm::vec3(0), glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
-		glm::lookAt(glm::vec3(0), glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
-		glm::lookAt(glm::vec3(0), glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))
-	};
+	glm::vec3 light_pos = light->GetGameObject()->GetComponent<Transform>()->GetPosition();
 
-	
-
+	glm::mat4 render_projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, light->GetFar());
 	for (unsigned int i = 0; i < 6; i++) {
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, p_lights[index], 0);
 	}
+	glm::mat4 render_view_mats[] =
+	{
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(1, 0, 0), glm::vec3(0, -1, 0)),
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)),
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0, 1, 0), glm::vec3(0, 0, 1)),
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)),
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)),
+		render_projection * glm::lookAt(light_pos, light_pos + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0))
+	};
+
+	Shader shadows = Shader("Lighting/Shaders/point_shadows.vert", "Lighting/Shaders/point_shadows.frag", "Lighting/Shaders/point_shadows.geom");
+	shadows.SetActive();
+
+	shadows.SetMat4("view_mats[0]", render_view_mats[0]);
+	shadows.SetMat4("view_mats[1]", render_view_mats[1]);
+	shadows.SetMat4("view_mats[2]", render_view_mats[2]);
+	shadows.SetMat4("view_mats[3]", render_view_mats[3]);
+	shadows.SetMat4("view_mats[4]", render_view_mats[4]);
+	shadows.SetMat4("view_mats[5]", render_view_mats[5]);
+
+	shadows.SetVec3("light_position", light_pos);
+	shadows.SetFloat("clipping_plane_far", light->GetFar());
+
+	Relic::GetCurrentScene()->Render(&shadows, render_projection, glm::mat4(), true);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	return {};
+	Relic::GetStandardShader()->SetActive();
+	glViewport(0, 0, Relic::GetWindow()->WindowWidth(), Relic::GetWindow()->WindowHeight());
+	glCullFace(GL_BACK);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	DepthRet ret;
+	ret.depth_map = p_lights[index];
+	ret.light_space = glm::mat4();
+	return ret;
 }
 
 void RenderUtil::SetDirLightDM()
@@ -237,8 +263,17 @@ void RenderUtil::SetDirLightDM()
 
 void RenderUtil::SetSpotLightDM()
 {
-	glActiveTexture(GL_TEXTURE11);
+	glActiveTexture(GL_TEXTURE12);
 	glBindTexture(GL_TEXTURE_2D, s_depthMap);
+}
+
+void RenderUtil::SetPointLightDMs()
+{
+	for(int i = 0; i < Light::MAX_P_LIGHTS; i++)
+	{
+		glActiveTexture(GL_TEXTURE8 + i);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, p_lights[i]);
+	}
 }
 
 int RenderUtil::RenderTextureFromCube(Shader* render_shader, unsigned id, int size, bool cubemap_input, bool mipmaps)
@@ -466,10 +501,10 @@ void RenderUtil::RenderQuad()
 void RenderUtil::InitLightDepthMaps(Shader* shader)
 {
 	shader->SetInt("sun.depth_map", 3);
-	shader->SetInt("pointLights[0].depth_map", 3);
-	shader->SetInt("pointLights[1].depth_map", 3);
-	shader->SetInt("pointLights[2].depth_map", 3);
-	shader->SetInt("pointLights[3].depth_map", 3);
+	shader->SetInt("pointLights[0].depth_map", 1);
+	shader->SetInt("pointLights[1].depth_map", 1);
+	shader->SetInt("pointLights[2].depth_map", 1);
+	shader->SetInt("pointLights[3].depth_map", 1);
 	shader->SetInt("spotLight.depth_map", 3);
 
 }
@@ -485,3 +520,5 @@ unsigned int RenderUtil::FBO;
 unsigned int RenderUtil::DFBO;
 unsigned int RenderUtil::p_lights[Light::MAX_P_LIGHTS];
 bool RenderUtil::has_buffered_cube;
+Shader* RenderUtil::d_light_shader;
+Shader* RenderUtil::s_light_shader;

@@ -112,6 +112,8 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath, const char* geo
 	//we dont need these anymore so lets delete them
 	glDeleteShader(vertex);
 	glDeleteShader(fragment);
+	if(geometryPath != NULL)
+		glDeleteShader(geometry);
 }
 
 void Shader::SetActive()

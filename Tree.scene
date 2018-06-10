@@ -142,5 +142,37 @@
       },
     ],
    },
+   {
+    "name": "P_LIGHT",
+    "behaviours":
+    [
+      {
+       "lpx": 0.0,
+       "lpy": 0.0,
+       "lpz": 0.0,
+       "px": 0.0,
+       "py": 0.0,
+       "pz": 0.0,
+       "lrx": 0.0,
+       "lry": 0.0,
+       "lrz": 0.0,
+       "lrw": 1.0,
+       "rx": 0.0,
+       "ry": 0.0,
+       "rz": 0.0,
+       "rw": 1.0,
+       "parent": #1,
+       "children":
+       [
+       ],
+       "_type_": "Transform",
+       "_id_": 12,
+      },
+      {
+       "_type_": "PointLight",
+       "_id_": 13,
+      },
+    ],
+   },
  ],
 }

@@ -20,12 +20,12 @@ struct DirLight {
 };
 
 struct PointLight {
-	sampler2D depth_map;
+	samplerCube depth_map;
 	vec3 position;
+	float far;
 
 	vec3 color;
 	float intensity;
-	mat4 light_space;
 };
 
 struct SpotLight {
@@ -110,6 +110,32 @@ float Shadow(sampler2D map, mat4 light_space, vec3 normal, vec3 lightDir)
 	return shad;
 }
 
+float PointShadow(samplerCube map, vec3 lightPos, float far)
+{
+	vec3 lightDir = FragPos - lightPos;
+	
+	float our_depth = length(lightDir);
+	
+	float shadow = 0;
+	float bias = 0.05;
+	float samples = 2;
+	float offset = 0.1;
+	
+	for(float x = -offset; x < offset; x += offset / (samples / 2))
+	{
+		for(float y = -offset; y < offset; y += offset / (samples / 2))
+		{
+			for(float z = -offset; z < offset; z += offset / (samples / 2))
+			{
+				float pcf_depth = texture(map, lightDir + vec3(x, y, z)).r * far;
+				shadow += (our_depth - bias) > pcf_depth ? 0 : 1;
+			}
+		}
+	}
+	
+	shadow = float(shadow) / float(pow(samples, 3));
+	return shadow;
+}
 
 //PBR Calculation functions
 vec3 FresnelShlick(vec3 H, vec3 V, vec3 F0, float roughness)
@@ -205,8 +231,10 @@ void main()
 	
 	vec3 ambient = (kD * diffuse + specular);
 	
+	vec3 lightDir = FragPos - pointLights[0].position;
 	vec3 color = luminosity + ambient;
-	
+	//vec3 color = vec3(texture(pointLights[0].depth_map, normalize(lightDir)).r) / pointLights[0].far;
+
 	color = color / (color + vec3(1));
 	color = pow(color, vec3(1/2.2));
 	FragColor = vec4(color, 1);
@@ -225,7 +253,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 	vec3 lightDir = normalize(light.position - fragPos);
 	float distance = length(light.position - fragPos);
 	
-	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true) * Shadow(light.depth_map, light.light_space, normal, lightDir);
+	return CalcBRDF(normal, viewDir, lightDir, light.color, F0, distance, light.intensity, true); //* PointShadow(light.depth_map, light.position, light.far);
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 F0)

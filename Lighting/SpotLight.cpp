@@ -41,7 +41,6 @@ void SpotLight::Initialise()
 	SHADER->SetVec3(lightLocation + ".direction", direction);
 	SHADER->SetFloat(lightLocation + ".cutOff", glm::cos(glm::radians(cutOff)));
 	SHADER->SetFloat(lightLocation + ".outerCutOff", glm::cos(glm::radians(outerCutOff)));
-
 }
 
 

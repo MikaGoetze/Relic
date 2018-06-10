@@ -113,6 +113,8 @@ void Model::SendToGPU(unsigned int obj_index)
 	glEnableVertexAttribArray(2);
 
 	on_gpu.at(obj_index) = true;
+
+	delete[] data;
 }
 
 unsigned Model::GetVAO(unsigned int obj_index)
