@@ -105,7 +105,7 @@ RenderUtil::DepthRet RenderUtil::GetLightDepthMap(DirectionalLight* light)
 	glm::mat4 light_view = glm::lookAt(pos, pos + light->GetDirection(), glm::vec3(0, 1, 0));
 	glm::mat4 light_space = dir_light_proj * light_view;
 
-	if(d_light_shader == NULL) d_light_shader = new Shader("Lighting/Shaders/d_light_shader.vert", "Lighting/Shaders/d_light_shader.frag");
+	if(d_light_shader == NULL) d_light_shader = new Shader("Lighting/Shaders/shadows.vert", "Lighting/Shaders/shadows.frag");
 	d_light_shader->SetActive();
 	d_light_shader->SetMat4("light_space", light_space);
 

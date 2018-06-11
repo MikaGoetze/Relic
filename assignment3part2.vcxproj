@@ -158,6 +158,7 @@
     <ClInclude Include="Core\Input.h" />
     <ClInclude Include="Core\Relic.h" />
     <ClInclude Include="Core\RelicBehaviour.h" />
+    <ClInclude Include="Core\RenderUtil.h" />
     <ClInclude Include="Core\Scene.h" />
     <ClInclude Include="Core\Serializable.h" />
     <ClInclude Include="Core\Serializer.h" />
@@ -177,12 +178,12 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Test.h" />
     <ClInclude Include="Texturing\HDRTexture.h" />
-    <ClInclude Include="Texturing\RenderUtil.h" />
     <ClInclude Include="Texturing\stb_image.h" />
     <ClInclude Include="Texturing\Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Core\GameObject.cpp" />
+    <ClCompile Include="Core\RenderUtil.cpp" />
     <ClCompile Include="Core\Scene.cpp" />
     <ClCompile Include="Core\Serializable.cpp" />
     <ClCompile Include="Core\Serializer.cpp" />
@@ -190,7 +191,6 @@
     <ClCompile Include="Model\MeshRenderer.cpp" />
     <ClCompile Include="PlayerMove.cpp" />
     <ClCompile Include="Texturing\HDRTexture.cpp" />
-    <ClCompile Include="Texturing\RenderUtil.cpp" />
     <ClCompile Include="user_main.cpp" />
     <ClCompile Include="Camera\Camera.cpp" />
     <ClCompile Include="Camera\FPSCamera.cpp" />

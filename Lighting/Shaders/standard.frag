@@ -233,7 +233,6 @@ void main()
 	
 	vec3 lightDir = FragPos - pointLights[0].position;
 	vec3 color = luminosity + ambient;
-	//vec3 color = vec3(texture(pointLights[0].depth_map, normalize(lightDir)).r) / pointLights[0].far;
 
 	color = color / (color + vec3(1));
 	color = pow(color, vec3(1/2.2));

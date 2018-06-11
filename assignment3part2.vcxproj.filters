@@ -99,7 +99,7 @@
     <ClInclude Include="Texturing\HDRTexture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Texturing\RenderUtil.h">
+    <ClInclude Include="Core\RenderUtil.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -179,7 +179,7 @@
     <ClCompile Include="Texturing\HDRTexture.cpp">
       <Filter>Header Files</Filter>
     </ClCompile>
-    <ClCompile Include="Texturing\RenderUtil.cpp">
+    <ClCompile Include="Core\RenderUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

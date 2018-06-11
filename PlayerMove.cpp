@@ -13,13 +13,13 @@ void PlayerMove::Deserialize()
 void PlayerMove::Update()
 {
 	float speed = 8 * Relic::GetDeltaTime();
-	if (Input::GetKey(GLFW_KEY_PERIOD)) 
+	if (Input::GetKey(GLFW_KEY_W)) 
 		transform->SetPosition(transform->GetPosition() + cam->GetDirection() * speed);
-	if (Input::GetKey(GLFW_KEY_E)) 
+	if (Input::GetKey(GLFW_KEY_S)) 
 		transform->SetPosition(transform->GetPosition() - cam->GetDirection() * speed);
-	if (Input::GetKey(GLFW_KEY_U)) 
+	if (Input::GetKey(GLFW_KEY_D)) 
 		transform->SetPosition(transform->GetPosition() + cam->GetRight() * speed);
-	if (Input::GetKey(GLFW_KEY_O)) 
+	if (Input::GetKey(GLFW_KEY_A)) 
 		transform->SetPosition(transform->GetPosition() - cam->GetRight() * speed);
 }
 

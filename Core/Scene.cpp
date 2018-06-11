@@ -137,8 +137,8 @@ void Scene::Render(Shader* shader, glm::mat4 proj, glm::mat4 view, bool is_light
 
 	//Shader simple = Shader("Lighting/Shaders/simple_tex.vert", "Lighting/Shaders/simple_tex.frag");
 	//simple.SetActive();
-	//simple.SetInt("depth_map", 16);
-	//RenderUtil::RenderQuad();
+	//simple.SetInt("depth_map", 7);
+	//hRenderUtil::RenderQuad();
 
 	RenderUtil::RenderCube();
 
