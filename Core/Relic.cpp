@@ -26,7 +26,7 @@ Relic::Relic()
 	
 	
 
-	Window = new ::Window();
+	window = new ::Window();
 	behaviours = new std::vector<RelicBehaviour*>();
 
 	//Lets set the game running
@@ -63,7 +63,7 @@ void Relic::Update()
 	deltaTime = currentFrame - lastFrame;
 	lastFrame = currentFrame;
 
-	if (Window->ShouldClose()) {
+	if (window->ShouldClose()) {
 		gameRunning = false;
 		return;
 	}
@@ -82,7 +82,7 @@ void Relic::Update()
 	//Do rendering stuff here.
 
 	glm::mat4 view = Camera::main->GetView();
-	glm::mat4 projection = glm::perspective(45.0f, (float) Window->WindowWidth() / Window->WindowHeight(), 0.05f, 100.0f);
+	glm::mat4 projection = glm::perspective(45.0f, (float) window->WindowWidth() / window->WindowHeight(), 0.05f, 100.0f);
 	standard_shader->SetActive();
 	standard_shader->SetMat4("view", view);
 	standard_shader->SetMat4("projection", projection);
@@ -95,24 +95,10 @@ void Relic::Update()
 		currentScene->Render(standard_shader, projection, view, false);
 
 	//We're done rendering, lets swap the buffers
-	glfwSwapBuffers(Window->InternalWindow());
+	glfwSwapBuffers(window->InternalWindow());
 	//Poll events
 	glfwPollEvents();
 
-}
-
-//Credit to khronos for this function
-void GLAPIENTRY MessageCallback(GLenum source,
-	GLenum type,
-	GLuint id,
-	GLenum severity,
-	GLsizei length,
-	const GLchar* message,
-	const void* userParam)
-{
-	fprintf(stdout, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-		(type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-		type, severity, message);
 }
 
 void Relic::Start()
@@ -120,7 +106,7 @@ void Relic::Start()
 	//Pass control over to the user for initialisation
 	RelicEntry();
 
-	if(!Window->initialised)
+	if(!window->initialised)
 	{
 		Util::Log("[Relic][Core] Error : Finished initialisation, but no game window is set up. Extiting...");
 		Util::ErrorExit();
@@ -128,9 +114,6 @@ void Relic::Start()
 
 	glewExperimental = GL_TRUE;
 	GLenum err = glewInit();
-
-	glEnable(GL_DEBUG_OUTPUT);
-	glDebugMessageCallback(MessageCallback, 0);
 
 	if(err != GLEW_OK)
 	{
@@ -143,7 +126,7 @@ void Relic::Start()
 	standard_shader = new Shader("Lighting/Shaders/standard.vert", "Lighting/Shaders/standard.frag");
 
 	//Initialise input
-	Input::Instance = new Input(Window->InternalWindow());
+	Input::Instance = new Input(window->InternalWindow());
 
 	RelicStart();
 
@@ -153,7 +136,7 @@ void Relic::Start()
 
 void Relic::Exit()
 {
-	glfwSetWindowShouldClose(instance->Window->InternalWindow(), true);
+	glfwSetWindowShouldClose(instance->window->InternalWindow(), true);
 	for (auto& behaviour : *instance->behaviours)
 	{
 		Util::Log("[Relic][Core] Cleaning up " + RelicBehaviour::GetClassName(behaviour) + ".");

@@ -12,13 +12,13 @@ ifneq (, $(findstring CYGWIN, $(PLATFORM)))
     DEFS =-DWIN32 -I.
 endif
 
-LINK += Shader.o Camera.o DirectionalLight.o FPSCamera.o Light.o PointLight.o SpotLight.o Texture.o OrbitCamera.o Input.o Model.o
+LINK += Shader.o Camera.o DirectionalLight.o FPSCamera.o Light.o PointLight.o SpotLight.o Texture.o Input.o Model.o
 LINK += HDRTexture.o MeshRenderer.o GameObject.o Relic.o RenderUtil.o Scene.o Serializable.o Serializer.o Transform.o Util.o Window.o
 LINK += PlayerMove.o Test.o user_main.o
 
 .PHONY:  clean
 
-all : assign3
+all: assign3
 
 assign3: main.o $(LINK)
 	g++ --std=c++11 -I. $(DEFS) -o assign3 $(LINK) $(GL_LIBS) main.o 
@@ -26,14 +26,14 @@ assign3: main.o $(LINK)
 main.o: Core/main.cpp $(LINK)
 	g++ --std=c++11 -I. $(DEFS) -c Core/main.cpp
 
-Shader.o: Lighting/Scripts/Shader.cpp Lighting/Scripts/Shader.h
-	g++ --std=c++11 -I. $(DEFS) -c Lighting/Scripts/Shader.cpp
+Shader.o: Lighting/Shader.cpp Lighting/Shader.h
+	g++ --std=c++11 -I. $(DEFS) -c Lighting/Shader.cpp
 
 Camera.o: Camera/Camera.cpp Camera/Camera.h
 	g++ --std=c++11 -I. $(DEFS) -c Camera/Camera.cpp
 
-DirectionalLight.o: Lighting/Scripts/DirectionalLight.cpp Lighting/Scripts/DirectionalLight.h
-	g++ --std=c++11 -I. $(DEFS) -c Lighting/Scripts/DirectionalLight.cpp
+DirectionalLight.o: Lighting/DirectionalLight.cpp Lighting/DirectionalLight.h
+	g++ --std=c++11 -I. $(DEFS) -c Lighting/DirectionalLight.cpp
 
 FPSCamera.o: Camera/FPSCamera.cpp Camera/FPSCamera.h
 	g++ --std=c++11 -I. $(DEFS) -c Camera/FPSCamera.cpp
@@ -44,22 +44,22 @@ Input.o: Core/Input.cpp Core/Input.h
 Model.o: Model/Model.cpp Model/Model.h
 	g++ --std=c++11 -I. $(DEFS) -c Model/Model.cpp
 
-Light.o: Lighting/Scripts/Light.cpp Lighting/Scripts/Light.h
-	g++ --std=c++11 -I. $(DEFS) -c Lighting/Scripts/Light.cpp
+Light.o: Lighting/Light.cpp Lighting/Light.h
+	g++ --std=c++11 -I. $(DEFS) -c Lighting/Light.cpp
 
-PointLight.o: Lighting/Scripts/PointLight.cpp Lighting/Scripts/PointLight.h
-	g++ --std=c++11 -I. $(DEFS) -c Lighting/Scripts/PointLight.cpp
+PointLight.o: Lighting/PointLight.cpp Lighting/PointLight.h
+	g++ --std=c++11 -I. $(DEFS) -c Lighting/PointLight.cpp
 
-SpotLight.o: Lighting/Scripts/SpotLight.cpp Lighting/Scripts/SpotLight.h
-	g++ --std=c++11 -I. $(DEFS) -c Lighting/Scripts/SpotLight.cpp
+SpotLight.o: Lighting/SpotLight.cpp Lighting/SpotLight.h
+	g++ --std=c++11 -I. $(DEFS) -c Lighting/SpotLight.cpp
 
 Texture.o: Texturing/Texture.cpp Texturing/Texture.h
 	g++ --std=c++11 -I. $(DEFS) -c Texturing/Texture.cpp
 	
-HDRTexture.o: Texturing/HDRTexture.h Texturing/HDRTexture.cpp:
+HDRTexture.o: Texturing/HDRTexture.h Texturing/HDRTexture.cpp
 	g++ --std=c++11 -I. $(DEFS) -c Texturing/HDRTexture.cpp
 
-MeshRenderer.o: Model/MeshRenderer.h Model/MeshRenderer.cpp:
+MeshRenderer.o: Model/MeshRenderer.h Model/MeshRenderer.cpp
 	g++ --std=c++11 -I. $(DEFS) -c Model/MeshRenderer.cpp
 
 GameObject.o: Core/GameObject.h Core/GameObject.cpp
@@ -92,10 +92,10 @@ Window.o: Core/Window.h Core/Window.cpp
 PlayerMove.o: PlayerMove.h PlayerMove.cpp
 	g++ --std=c++11 -I. $(DEFS) -c PlayerMove.cpp
 	
-Test.o: Test.h Test.cpp:
+Test.o: Test.h Test.cpp
 	g++ --std=c++11 -I. $(DEFS) -c Test.cpp
 	
-user_main.o: user_main.cpp:
+user_main.o: user_main.cpp
 	g++ --std=c++11 -I. $(DEFS) -c user_main.cpp
 
 clean:

@@ -20,7 +20,7 @@ public:
 	Relic();
 	~Relic();
 
-	static Window* GetWindow() { return instance->Window; }
+	static Window* GetWindow() { return instance->window; }
 	static void Exit();
 
 	static void LoadScene(Scene* scene);
@@ -35,7 +35,7 @@ public:
 
 private:
 	static Relic* instance;
-	Window* Window;
+	Window* window;
 	bool gameRunning;
 	Scene* currentScene;
 	Shader* standard_shader;

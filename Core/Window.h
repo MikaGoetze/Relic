@@ -49,7 +49,7 @@ private:
 	int windowWidth;
 	int windowHeight;
 	std::string windowTitle;
-	GLFWwindow* window;
+	GLFWwindow* window = NULL;
 	bool initialised;
 
 	friend class Relic;

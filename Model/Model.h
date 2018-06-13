@@ -40,7 +40,7 @@ private:
 	tinyobj::attrib_t* attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
-	bool model_loaded;
+	bool model_loaded = false;
 	std::vector<bool> on_gpu;
 	std::vector<unsigned int> vaos;
 	std::vector<unsigned int> vbos;

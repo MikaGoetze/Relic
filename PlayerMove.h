@@ -17,4 +17,4 @@ private:
 	Transform* transform = NULL;
 };
 
-#endif;
+#endif

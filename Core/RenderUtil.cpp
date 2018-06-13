@@ -6,7 +6,7 @@
 #include <Lighting/DirectionalLight.h>
 #include <Lighting/SpotLight.h>
 #include <Lighting/PointLight.h>
-#include <glm/gtc/matrix_transform.inl>
+#include <glm/gtc/matrix_transform.hpp>
 
 unsigned int RenderUtil::RenderEquirectangularEnvironmentToCubemap(unsigned int id)
 {
